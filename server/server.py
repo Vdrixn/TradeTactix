@@ -25,18 +25,22 @@ all_symbols = []  # Lista solo de símbolos de acciones
 
 # Funciones auxiliares
 
+
 # Comprueba si el índice está en la caché y si los datos están actualizados
 def __is_cache_up_to_date(cache, index):
     return (
         index in cache and (datetime.now() - cache[index]["timestamp"]) <= cache_timeout
     )
 
+
 def get_coin_id(symbol):
     return crypto_ids.get(symbol.upper())
+
 
 # ---------------------------------------------------------------------------
 
 # Funciones de inicialización de datos
+
 
 def initialize_crypto_symbols(limit=250):  # Aumentado el límite para más criptomonedas
     global crypto_symbols_map, crypto_ids
@@ -67,6 +71,7 @@ def initialize_stock_symbols():
     except Exception as e:
         print(f"Error al inicializar los símbolos de acciones: {e}")
 
+
 def initialize_forex_symbols():
     global forex_symbols_map
     try:
@@ -81,7 +86,9 @@ def initialize_forex_symbols():
     except Exception as e:
         print(f"Error al inicializar los símbolos de pares de divisas: {e}")
 
+
 # ---------------------------------------------------------------------------
+
 
 # Endpoints para obtener listados de los simbolos de criptomonedas, acciones y divisas para barra de busqueda
 @app.route("/api/crypto-symbols")
@@ -89,19 +96,23 @@ def api_crypto_symbols():
     # Devuelve el mapa de símbolos y nombres de criptomonedas
     return jsonify(crypto_symbols_map)
 
+
 @app.route("/api/stock-symbols")
 def api_stock_symbols():
     # Devuelve el mapa de símbolos y nombres de acciones
     return jsonify(stocks_symbols_map)
+
 
 @app.route("/api/forex-symbols")
 def api_forex_symbols():
     # Devuelve el mapa de símbolos y nombres de pares de divisas
     return jsonify(forex_symbols_map)
 
+
 # ---------------------------------------------------------------------------
 
 # Endpoints para listado de activos financieros
+
 
 # ------------------------Criptomonedas-------------------
 def __get_crypto_data_from_api(cache_page):
@@ -130,6 +141,7 @@ def __get_crypto_data_from_api(cache_page):
         }
         crypto_cache[index] = {"timestamp": datetime.now(), "data": crypto_info}
 
+
 @app.route("/crypto_listings")
 def crypto_listings():
     actual_page = request.args.get("page", 1, type=int)
@@ -150,23 +162,32 @@ def crypto_listings():
     ]
     return jsonify(crypto_data)
 
+
 # ------------------------Acciones------------------------
+
 
 def __get_stocks_data_from_api(cache_page):
     start_index = cache_page * 50
     end_index = start_index + 50
     # Asegura que no excedas el número de símbolos disponibles
     subset_symbols = all_symbols[start_index : min(end_index, len(all_symbols))]
-    processed_count = 0
-    symbol_index = 0
 
-    while processed_count < 50 and symbol_index < len(subset_symbols):
-        symbol = subset_symbols[symbol_index]
+    try:
+        # Descarga los datos de los tickers en una sola consulta
+        data = yf.download(subset_symbols, period="7d", group_by="ticker")
+    except Exception as e:
+        print(f"Error descargando datos para los símbolos: {e}")
+        return
+
+    processed_count = 0
+
+    for symbol in subset_symbols:
         try:
-            stock = yf.Ticker(symbol)
-            hist = stock.history(period="7d")
+            if symbol not in data:
+                continue
+
+            hist = data[symbol]
             if len(hist) < 2:
-                symbol_index += 1
                 continue
 
             today_price = hist["Close"].iloc[-1]
@@ -177,6 +198,7 @@ def __get_stocks_data_from_api(cache_page):
                 (today_price - hist["Close"].iloc[0]) / hist["Close"].iloc[0] * 100
             )
 
+            stock = yf.Ticker(symbol)
             stock_info = {
                 "symbol": symbol,
                 "name": stock.info.get("shortName", ""),
@@ -194,11 +216,10 @@ def __get_stocks_data_from_api(cache_page):
         except Exception as e:
             print(f"Error procesando el símbolo {symbol}: {e}")
 
-        symbol_index += 1
-
     # Si no se alcanzaron los 50 y todavía hay símbolos por procesar
     if processed_count < 50 and (start_index + processed_count) < len(all_symbols):
         __get_stocks_data_from_api(cache_page + 1)
+
 
 @app.route("/stocks_listings")
 def stocks_listings():
@@ -220,18 +241,23 @@ def stocks_listings():
     ]
     return jsonify(stocks_data)
 
+
 # ------------------------Divisas-------------------------
+
 
 def __get_forex_data_from_api(cache_page):
     pass
+
 
 @app.route("/forex_listings")
 def forex_listings():
     pass
 
+
 # ---------------------------------------------------------------------------
 
 # Endpoints para obtener resúmenes de activos financieros
+
 
 @app.route("/api/summary")
 def api_summary():
@@ -245,7 +271,8 @@ def api_summary():
         return get_forex_summary(symbol)
     else:
         return jsonify({"error": "Símbolo no encontrado"}), 404
-    
+
+
 def get_crypto_summary(symbol):
     try:
         coin_id = get_coin_id(symbol)
@@ -286,6 +313,7 @@ def get_crypto_summary(symbol):
         return jsonify(summary)
     except Exception as e:
         return jsonify({"error": f"Error al obtener datos de criptomoneda: {e}"}), 500
+
 
 def get_stock_summary(symbol):
     try:
@@ -328,7 +356,9 @@ def get_forex_summary(symbol):
     except Exception as e:
         return jsonify({"error": f"Error al obtener datos de divisas: {e}"}), 500
 
+
 # Endpoint para obtener datos de gráfico de los activos financieros
+
 
 @app.route("/api/chart", methods=["GET"])
 def get_chart_data():
@@ -343,6 +373,7 @@ def get_chart_data():
         return get_stock_chart_data(symbol, interval, start_date, end_date)
     else:
         return jsonify({"error": "Símbolo no encontrado"}), 404
+
 
 def get_crypto_chart_data(symbol, interval, start_date, end_date):
     try:
@@ -371,6 +402,7 @@ def get_crypto_chart_data(symbol, interval, start_date, end_date):
         return jsonify(
             {"error": f"Error al obtener datos del gráfico de criptomoneda: {e}"}
         ), 500
+
 
 def get_crypto_chart_data_yf(symbol, interval, start_date, end_date):
     try:
@@ -420,10 +452,13 @@ def get_stock_chart_data(symbol, interval, start_date, end_date):
             {"error": f"Error al obtener datos del gráfico de acción: {e}"}
         ), 500
 
+
 def get_forex_chart_data(symbol, interval, start_date, end_date):
     pass
 
+
 # ---------------------------------------------------------------------------
+
 
 # Endpoint para realizar el backtesting
 @app.route("/api/backtest", methods=["POST"])
