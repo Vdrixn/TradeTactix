@@ -114,7 +114,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }: SidebarProps) => {
               {/* <!-- Menu Item Dashboard --> */}
               <SidebarLinkGroup
                 activeCondition={
-                  pathname === "/" || pathname.includes("dashboard")
+                  pathname === "/listings/cryptos" ||
+                  pathname.includes("cryptos") ||
+                  pathname.includes("stocks") ||
+                  pathname.includes("forex")
                 }
               >
                 {(handleClick, open) => {

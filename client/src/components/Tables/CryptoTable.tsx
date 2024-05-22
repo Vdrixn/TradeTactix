@@ -57,7 +57,7 @@ const CryptoTable = () => {
       </span>
     );
   };
- 
+
   return (
     <div className="w-full rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
@@ -82,9 +82,8 @@ const CryptoTable = () => {
               key={key}
               className="border-b border-stroke dark:border-strokedark"
             >
-              {/* <td className="p-2.5 xl:p-5">{crypto.symbol}</td> */}
               <td className="flex items-center p-2.5 xl:p-5">
-                <div className="flex-shrink-0 w-6 h-6 mr-2">
+                <div className="mr-2 h-6 w-6 flex-shrink-0">
                   <Image
                     src={crypto.image}
                     alt={crypto.symbol}
@@ -93,7 +92,12 @@ const CryptoTable = () => {
                     className="rounded-full"
                   />
                 </div>
-                {crypto.symbol}
+                <a
+                  href={`http://localhost:3000/backtesting?symbol=${crypto.symbol}`}
+                  className="text-blue-500 hover:underline"
+                >
+                  {crypto.symbol}
+                </a>
               </td>
               <td className="p-2.5 xl:p-5">{crypto.name}</td>
               <td className="p-2.5 xl:p-5">${crypto.current_price}</td>
