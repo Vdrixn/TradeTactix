@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
-import TradingViewWidget from "@/components/Charts/TradingViewWidget";
+import TradingViewWidget1 from "@/components/Charts/TradingViewWidget1";
 import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
 
 interface Summary {
@@ -162,7 +162,7 @@ const BacktestingPage: React.FC = () => {
       )}
 
       <div className="flex flex-row">
-        <div className="w-3/4 p-4">
+        <div className="w-full p-4">
           <div className="mb-4 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
             <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
               <h3 className="text-gray-200 text-xl font-medium">
@@ -173,53 +173,7 @@ const BacktestingPage: React.FC = () => {
               className="flex flex-col gap-5.5 p-6.5"
               style={{ height: "550px" }}
             >
-              <TradingViewWidget symbol={symbol} indicador={type} />
-            </div>
-          </div>
-        </div>
-
-        <div className="w-1/4 p-4">
-          <div className="mb-4 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-            <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
-              <h3 className="text-gray-200 text-xl font-medium">
-                Resumen del Activo
-              </h3>
-            </div>
-            <div className="flex flex-col gap-5.5 border-b border-stroke p-6.5 px-6.5 py-4 dark:border-strokedark">
-              {summary.name ? (
-                <>
-                  {summary.name && (
-                    <p className="text-gray-400">Nombre: {summary.name}</p>
-                  )}
-                  {summary.current_price && (
-                    <p className="text-gray-400">
-                      Precio: ${summary.current_price}
-                    </p>
-                  )}
-                  {summary.market_cap && (
-                    <p className="text-gray-400">
-                      Capitalización de Mercado: ${summary.market_cap}
-                    </p>
-                  )}
-                  {summary.total_volume && (
-                    <p className="text-gray-400">
-                      Volumen: ${summary.total_volume}
-                    </p>
-                  )}
-                  {summary.high_24h && (
-                    <p className="text-gray-400">
-                      Máximo 24h: ${summary.high_24h}
-                    </p>
-                  )}
-                  {summary.low_24h && (
-                    <p className="text-gray-400">
-                      Mínimo 24h: ${summary.low_24h}
-                    </p>
-                  )}
-                </>
-              ) : (
-                <p className="text-gray-400">Cargando...</p>
-              )}
+              <TradingViewWidget1 symbol={symbol} indicador={type} />
             </div>
           </div>
         </div>
@@ -228,24 +182,40 @@ const BacktestingPage: React.FC = () => {
       <div className="flex flex-row">
         <div className="w-3/4 p-4">
           <div
-            className="mb-4 flex flex-col justify-between rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
-            style={{ minHeight: "100%" }}
-          >
-            <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
-              <h3 className="text-gray-200 text-xl font-medium">
-                Escribir Algoritmo
-              </h3>
-            </div>
-            <div className="flex flex-grow flex-col gap-5.5 p-6.5">
-              <textarea
-                rows={6}
-                placeholder="El Algoritmo debe incluir únicamente la funcion generate_signals(data) que recibe un DataFrame con los precios. Debe retornar un DataFrame."
-                className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                value={algorithm}
-                onChange={(e) => setAlgorithm(e.target.value)}
-              ></textarea>
-            </div>
-          </div>
+  className="mb-4 flex flex-col justify-between rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
+  style={{ minHeight: "100%" }}
+>
+  <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
+    <h3 className="text-gray-200 text-xl font-medium">
+      Escribir Algoritmo
+    </h3>
+  </div>
+  <div className="flex flex-grow flex-col gap-5.5 p-6.5">
+    <textarea
+      rows={6}
+      placeholder={`El Algoritmo debe incluir únicamente la funcion generate_signals(data) que recibe un DataFrame con los precios. Debe retornar un DataFrame.
+
+Requisitos Obligatorios:
+1. Definición de la función:
+def generate_signals(data):
+
+2. Creación de la estructura de datos:
+signals = pd.DataFrame(index=data.index)
+
+3. Columna obligatoria 'positions':
+signals['positions'] = ...
+- Valores > 0: posición larga (compra).
+- Valores < 0: posición corta (venta).
+- Valores = 0: sin operación.
+
+4. Devolución del DataFrame:
+return signals`}
+      className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+      value={algorithm}
+      onChange={(e) => setAlgorithm(e.target.value)}
+    ></textarea>
+  </div>
+</div>
         </div>
 
         <div className="w-1/4 p-4">

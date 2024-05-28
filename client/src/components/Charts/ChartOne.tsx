@@ -113,7 +113,7 @@ const ChartOne: React.FC<ChartOneProps> = ({ portfolioData, holdData }) => {
               <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-primary"></span>
             </span>
             <div className="w-full">
-              <p className="font-semibold text-primary">Total Revenue</p>
+              <p className="font-semibold text-primary">Capital Estrategia</p>
               <p className="text-sm font-medium">
                 Fecha: {portfolioData[0]?.time} -{" "}
                 {portfolioData[portfolioData.length - 1]?.time}
@@ -125,7 +125,7 @@ const ChartOne: React.FC<ChartOneProps> = ({ portfolioData, holdData }) => {
               <span className="block h-2.5 w-full max-w-2.5 rounded-full bg-secondary"></span>
             </span>
             <div className="w-full">
-              <p className="font-semibold text-secondary">Total Sales</p>
+              <p className="font-semibold text-secondary">Capital Compra Única</p>
               <p className="text-sm font-medium">
                 Fecha: {portfolioData[0]?.time} -{" "}
                 {portfolioData[portfolioData.length - 1]?.time}

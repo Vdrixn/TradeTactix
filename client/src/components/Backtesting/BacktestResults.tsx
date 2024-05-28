@@ -13,6 +13,8 @@ interface BacktestResultsProps {
       max_drawdown: number;
       max_increase: number;
       average_duration: number;
+      num_positions: number;
+      initial_capital: number;
     };
     signals: any;
     portfolio: any;
@@ -36,6 +38,12 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
 
   const summary = results.summary;
 
+  const filteredSignals = filteredSignalKeys.filter(
+    (key) =>
+      results.signals.positions[key] > 0 ||
+      results.signals.positions[key] < 0,
+  );
+
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -47,13 +55,19 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
       <div className="mt-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <CardDataStats
-            title="Valor Final del Portafolio"
+            title="Capital Final"
             total={`$${summary.final_portfolio_value.toFixed(2)}`}
-            rate={`${(summary.total_return * 100).toFixed(2)}%`}
-            levelUp={summary.total_return > 0}
-            levelDown={summary.total_return < 0}
+            rate={`${(summary.total_return * 100).toFixed(2)}$`}
+            levelUp={summary.total_return > summary.initial_capital}
+            levelDown={summary.total_return < summary.initial_capital}
           >
             <span className="text-black dark:text-white">💰</span>
+          </CardDataStats>
+          <CardDataStats
+            title="Total de Transacciones"
+            total={`${summary.num_trades}`}
+          >
+            <span className="text-black dark:text-white">💵</span>
           </CardDataStats>
           <CardDataStats
             title="Transacciones Ganadoras"
@@ -72,7 +86,15 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
             <span className="text-black dark:text-white">💔</span>
           </CardDataStats>
           <CardDataStats
-            title="Máximo Drawdown"
+            title="Posiciones Abiertas"
+            total={`${summary.num_positions}`}
+            rate=""
+            levelDown
+          >
+            <span className="text-black dark:text-white">🛒</span>
+          </CardDataStats>
+          <CardDataStats
+            title="Máximo Decrecimiento"
             total={`${(summary.max_drawdown * 100).toFixed(2)}%`}
             rate=""
             levelDown
@@ -107,7 +129,7 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
           <h4 className="text-lg font-semibold">Señales</h4>
           <div className="max-h-64 overflow-y-auto">
             <table className="min-w-full divide-y divide-stroke">
-              <thead className="sticky top-0 bg-gray dark:bg-boxdark">
+              <thead className="sticky top-0 bg-gray dark:bg-form-input dark:text-white">
                 <tr>
                   <th className="text-gray-500 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
                     Fecha
@@ -126,8 +148,8 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stroke bg-white">
-                {filteredSignalKeys.map((key, index) => (
+              <tbody className="divide-y divide-stroke bg-white dark:bg-form-input dark:text-white">
+                {filteredSignals.map((key, index) => (
                   <tr key={index}>
                     <td className="text-gray-500 whitespace-nowrap px-4 py-2 text-sm">
                       {key}
@@ -142,9 +164,9 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
                       {results.signals.tp_price[key]?.toFixed(2) || "-"}
                     </td>
                     <td className="text-gray-500 whitespace-nowrap px-4 py-2 text-sm">
-                      {results.signals.signal[key] === 1
+                      {results.signals.positions[key] > 0
                         ? "Largo"
-                        : results.signals.signal[key] === -1
+                        : results.signals.positions[key] < 0
                           ? "Corto"
                           : "-"}
                     </td>
@@ -159,7 +181,7 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
           <h4 className="text-lg font-semibold">Portafolio</h4>
           <div className="max-h-64 overflow-y-auto">
             <table className="min-w-full divide-y divide-stroke">
-              <thead className="sticky top-0 bg-gray dark:bg-boxdark">
+              <thead className="sticky top-0 bg-gray dark:bg-form-input dark:text-white">
                 <tr>
                   <th className="text-gray-500 px-4 py-2 text-left text-xs font-medium uppercase tracking-wider">
                     Fecha
@@ -178,7 +200,7 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stroke bg-white">
+              <tbody className="divide-y divide-stroke bg-white dark:bg-form-input dark:text-white">
                 {Object.keys(results.portfolio.positions).map((key, index) => (
                   <tr key={index}>
                     <td className="text-gray-500 whitespace-nowrap px-4 py-2 text-sm">

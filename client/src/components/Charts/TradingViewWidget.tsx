@@ -15,7 +15,7 @@ function TradingViewWidget({ symbol, indicador }) {
         formattedSymbol = `NASDAQ:${symbol}`;
         break;
       case "3":
-        formattedSymbol = `FX:${symbol}`;
+        formattedSymbol = `FX:${symbol.replace("/", "")}`;
         break;
       default:
         formattedSymbol = symbol;

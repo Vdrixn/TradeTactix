@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
-import TradingViewWidget1 from "@/components/Charts/TradingViewWidget1";
+import TradingViewWidget from "@/components/Charts/TradingViewWidget";
 import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
 
 interface Summary {
@@ -37,6 +37,10 @@ const BacktestingPage1: React.FC = () => {
   const [summary, setSummary] = useState<Summary>({});
   const [algorithm, setAlgorithm] = useState<string>("");
   const [temporalidad, setTemporalidad] = useState<string>("");
+  const [leverage, setLeverage] = useState<number>(1);
+  const [riskRewardRatio, setRiskRewardRatio] = useState<number>(1);
+  const [initialCapital, setInitialCapital] = useState<number>(1000);
+  const [tradeRisk, setTradeRisk] = useState<number>(1);
   const [backtestResults, setBacktestResults] = useState<any | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -62,7 +66,7 @@ const BacktestingPage1: React.FC = () => {
         newDate.setDate(today.getDate() - 59);
         break;
       case "1h":
-        newDate.setDate(today.getDate() - 730);
+        newDate.setDate(today.getDate() - 729);
         break;
       case "1D":
         newDate.setDate(today.getDate() - 1460);
@@ -107,6 +111,10 @@ const BacktestingPage1: React.FC = () => {
         start_date: startDate,
         end_date: endDate,
         temporalidad: temporalidad,
+        leverage: leverage,
+        risk_reward_ratio: riskRewardRatio,
+        initial_capital: initialCapital,
+        trade_risk: tradeRisk,
       }),
     })
       .then((res) => res.json())
@@ -154,7 +162,7 @@ const BacktestingPage1: React.FC = () => {
       )}
 
       <div className="flex flex-row">
-        <div className="w-full p-4">
+        <div className="w-3/4 p-4">
           <div className="mb-4 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
             <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
               <h3 className="text-gray-200 text-xl font-medium">
@@ -165,7 +173,53 @@ const BacktestingPage1: React.FC = () => {
               className="flex flex-col gap-5.5 p-6.5"
               style={{ height: "550px" }}
             >
-              <TradingViewWidget1 symbol={symbol} indicador={type} />
+              <TradingViewWidget symbol={symbol} indicador={type} />
+            </div>
+          </div>
+        </div>
+
+        <div className="w-1/4 p-4">
+          <div className="mb-4 rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+            <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
+              <h3 className="text-gray-200 text-xl font-medium">
+                Resumen del Activo
+              </h3>
+            </div>
+            <div className="flex flex-col gap-5.5 border-b border-stroke p-6.5 px-6.5 py-4 dark:border-strokedark">
+              {summary.name ? (
+                <>
+                  {summary.name && (
+                    <p className="text-gray-400">Nombre: {summary.name}</p>
+                  )}
+                  {summary.current_price && (
+                    <p className="text-gray-400">
+                      Precio: ${summary.current_price}
+                    </p>
+                  )}
+                  {summary.market_cap && (
+                    <p className="text-gray-400">
+                      Capitalización de Mercado: ${summary.market_cap}
+                    </p>
+                  )}
+                  {summary.total_volume && (
+                    <p className="text-gray-400">
+                      Volumen: ${summary.total_volume}
+                    </p>
+                  )}
+                  {summary.high_24h && (
+                    <p className="text-gray-400">
+                      Máximo 24h: ${summary.high_24h}
+                    </p>
+                  )}
+                  {summary.low_24h && (
+                    <p className="text-gray-400">
+                      Mínimo 24h: ${summary.low_24h}
+                    </p>
+                  )}
+                </>
+              ) : (
+                <p className="text-gray-400">Cargando...</p>
+              )}
             </div>
           </div>
         </div>
@@ -213,7 +267,7 @@ const BacktestingPage1: React.FC = () => {
                 <div className="text-gray-400 block">
                   <h2>Fecha de Inicio:</h2>
                   <DatePickerOne
-                    initialDate={minDate}
+                    initialDate={startDate}
                     onChange={handleStartDateChange}
                     minDate={minDate}
                     maxDate={formatDate(today)}
@@ -224,8 +278,50 @@ const BacktestingPage1: React.FC = () => {
                   <DatePickerOne
                     initialDate={endDate}
                     onChange={handleEndDateChange}
-                    minDate={minDate}
+                    minDate={startDate}
                     maxDate={formatDate(today)}
+                  />
+                </div>
+                <div className="text-gray-400 block">
+                  <h2>Apalancamiento:</h2>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={leverage}
+                    onChange={(e) => setLeverage(Number(e.target.value))}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                  />
+                </div>
+                <div className="text-gray-400 block">
+                  <h2>Ratio Riesgo:Beneficio:</h2>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={riskRewardRatio}
+                    onChange={(e) => setRiskRewardRatio(Number(e.target.value))}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                  />
+                </div>
+                <div className="text-gray-400 block">
+                  <h2>Capital Inicial:</h2>
+                  <input
+                    type="number"
+                    value={initialCapital}
+                    onChange={(e) => setInitialCapital(Number(e.target.value))}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                  />
+                </div>
+                <div className="text-gray-400 block">
+                  <h2>% por operación:</h2>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={tradeRisk}
+                    onChange={(e) => setTradeRisk(Number(e.target.value))}
+                    className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
                 <button
@@ -234,17 +330,13 @@ const BacktestingPage1: React.FC = () => {
                 >
                   Iniciar Backtesting
                 </button>
-                <button className="inline-flex items-center justify-center rounded-md bg-primary px-10 py-4 text-center font-medium text-white hover:bg-opacity-90 lg:px-8 xl:px-10">
-                  Crear Estrategia con IA
-                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-row">
-        {backtestResults && <BacktestResults results={backtestResults} />}
-      </div>
+
+      {backtestResults && <BacktestResults results={backtestResults} />}
     </div>
   );
 };

@@ -697,12 +697,13 @@ def backtest(
 
     winning_trades = 0
     losing_trades = 0
-    total_duration = 0
     trade_durations = []
     peak = initial_capital
     trough = initial_capital
 
     for date, signal in signals.iterrows():
+        entry_price = data.loc[date, "Close"]
+        signals.loc[date, "price"] = entry_price
         # Verificar y cerrar posiciones abiertas
         for position in open_positions[:]:
             entry_price = position["entry_price"]
@@ -731,8 +732,7 @@ def backtest(
         # Verificar si hay efectivo suficiente para abrir nuevas posiciones
         if current_cash > 0:
             # Abrir nuevas posiciones
-            if signal["signal"] == 1:  # Señal de compra
-                entry_price = data.loc[date, "Close"]
+            if signal["positions"] > 0:  # Señal de compra
                 position_size = (trade_amount * leverage) / entry_price
                 sl_price = entry_price - (entry_price * stop_loss)
                 tp_price = entry_price + (entry_price * take_profit)
@@ -751,8 +751,7 @@ def backtest(
                 )
                 current_cash -= trade_amount
 
-            elif signal["signal"] == -1:  # Señal de venta
-                entry_price = data.loc[date, "Close"]
+            elif signal["positions"] < 0:  # Señal de venta
                 position_size = (trade_amount * leverage) / entry_price
                 sl_price = entry_price + (entry_price * stop_loss)
                 tp_price = entry_price - (entry_price * take_profit)
@@ -786,7 +785,6 @@ def backtest(
             totalUnrealizedPnl += unrealizedPnl
 
         # Actualizar el valor del efectivo
-        print("unrealizedPnl", totalUnrealizedPnl)
         positions.loc[date, "asset"] = totalUnrealizedPnl
         portfolio.loc[date, "cash"] = current_cash
 
@@ -821,6 +819,8 @@ def backtest(
         "max_increase": max_increase,
         "average_duration": average_duration,
         "num_trades": winning_trades + losing_trades,
+        "num_positions": len(open_positions),
+        "initial_capital": initial_capital,
     }
 
     return portfolio, summary
@@ -853,7 +853,6 @@ def backtest_endpoint():
     except Exception as e:
         return jsonify({"error": f"Error fetching historical data: {str(e)}"}), 500
 
-    print("2")
     # Crear un diccionario para el espacio de nombres local
     local_namespace = {}
     # Ejecutar el algoritmo proporcionado
@@ -862,7 +861,6 @@ def backtest_endpoint():
     except Exception as e:
         return jsonify({"error": f"Error executing algorithm code: {str(e)}"}), 500
 
-    print("3")
     # Obtenemos la función generate_signals del espacio de nombres local
     generate_signals = local_namespace.get("generate_signals")
 
@@ -878,8 +876,6 @@ def backtest_endpoint():
     except Exception as e:
         return jsonify({"error": f"Error executing generate_signals: {str(e)}"}), 500
 
-    print("4")
-
     try:
         portfolio, summary = backtest(
             historical_data,
@@ -893,8 +889,6 @@ def backtest_endpoint():
         )
     except Exception as e:
         return jsonify({"error": f"Error executing backtest: {str(e)}"}), 500
-
-    print("5")
 
     # Convertir los índices a strings en el formato adecuado
     def format_date_index(index):
