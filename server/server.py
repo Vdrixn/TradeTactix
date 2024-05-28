@@ -43,6 +43,7 @@ def get_coin_id(symbol):
 
 # ---------------------------------------------------------------------------
 
+
 # Funciones de inicialización de datos
 
 
@@ -702,8 +703,11 @@ def backtest(
     trough = initial_capital
 
     for date, signal in signals.iterrows():
+        print("date", date)
+
         entry_price = data.loc[date, "Close"]
         signals.loc[date, "price"] = entry_price
+
         # Verificar y cerrar posiciones abiertas
         for position in open_positions[:]:
             entry_price = position["entry_price"]
@@ -712,6 +716,7 @@ def backtest(
             tp_price = position["tp_price"]
             direction = position["direction"]
             current_price = data.loc[date, "Close"]
+                
 
             if (direction == 1 and current_price <= sl_price) or (
                 direction == -1 and current_price >= sl_price
@@ -729,6 +734,8 @@ def backtest(
                 current_cash += trade_amount * risk_reward_ratio
                 open_positions.remove(position)
 
+
+        entry_price = data.loc[date, "Close"]
         # Verificar si hay efectivo suficiente para abrir nuevas posiciones
         if current_cash > 0:
             # Abrir nuevas posiciones
@@ -821,6 +828,8 @@ def backtest(
         "num_trades": winning_trades + losing_trades,
         "num_positions": len(open_positions),
         "initial_capital": initial_capital,
+        "unrealized_pnl": totalUnrealizedPnl,
+        "final_capital": total_value,
     }
 
     return portfolio, summary
@@ -917,7 +926,10 @@ def backtest_endpoint():
         "portfolio": portfolio_dict,
         "summary": {
             "final_portfolio_value": portfolio["total"].iloc[-1],
-            "total_return": ((portfolio["total"].iloc[-1] / portfolio["total"].iloc[0])-1)*100,
+            "total_return": (
+                (portfolio["total"].iloc[-1] / portfolio["total"].iloc[0]) - 1
+            )
+            * 100,
             **summary,  # Añadir el summary calculado
         },
     }
