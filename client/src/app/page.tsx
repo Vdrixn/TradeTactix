@@ -1,4 +1,4 @@
-import Cryptos from "@/components/Dashboard/Cryptos";
+import Cryptos from "@/components/Listings/Cryptos";
 import { Metadata } from "next";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 

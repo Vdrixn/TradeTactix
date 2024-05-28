@@ -1,30 +1,78 @@
 import flatpickr from "flatpickr";
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { format, parseISO } from "date-fns";
 
-const DatePickerOne = () => {
+interface DatePickerOneProps {
+  initialDate?: string;
+  onChange: (date: string) => void;
+  minDate?: string;
+  maxDate?: string;
+}
+
+const DatePickerOne: React.FC<DatePickerOneProps> = ({
+  initialDate,
+  onChange,
+  minDate,
+  maxDate,
+}) => {
+  const datePickerRef = useRef<HTMLInputElement>(null);
+  const [displayDate, setDisplayDate] = useState<string>("");
+
   useEffect(() => {
-    // Init flatpickr
-    flatpickr(".form-datepicker", {
-      mode: "single",
-      static: true,
-      monthSelectorType: "static",
-      dateFormat: "M j, Y",
-      prevArrow:
-        '<svg className="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
-      nextArrow:
-        '<svg className="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
-    });
-  }, []);
+    if (initialDate) {
+      try {
+        setDisplayDate(format(parseISO(initialDate), "MMM d, yyyy"));
+      } catch (error) {
+        console.error("Invalid initial date:", initialDate);
+      }
+    }
+  }, [initialDate]);
+
+  useEffect(() => {
+    if (datePickerRef.current) {
+      const fp = flatpickr(datePickerRef.current, {
+        mode: "single",
+        static: true,
+        monthSelectorType: "static",
+        dateFormat: "Y-m-d",
+        defaultDate: initialDate,
+        minDate: minDate, // Set the minimum date
+        maxDate: maxDate, // Set the maximum date
+        prevArrow:
+          '<svg className="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
+        nextArrow:
+          '<svg className="fill-current" width="7" height="11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
+        onChange: (selectedDates) => {
+          if (selectedDates.length > 0) {
+            const selectedDate = selectedDates[0];
+            const formattedDate = format(selectedDate, "yyyy-MM-dd");
+            const displayFormattedDate = format(selectedDate, "MMM d, yyyy");
+            setDisplayDate(displayFormattedDate);
+            onChange(formattedDate);
+          }
+        },
+      });
+
+      // Cleanup function to destroy flatpickr instance when component unmounts
+      return () => {
+        if (fp) {
+          fp.destroy();
+        }
+      };
+    }
+  }, [initialDate, onChange, minDate, maxDate]);
 
   return (
     <div>
       <div className="relative">
         <input
+          ref={datePickerRef}
+          defaultValue={displayDate}
+          onChange={(e) => setDisplayDate(e.target.value)}
           className="form-datepicker w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
           placeholder="mm/dd/yyyy"
           data-class="flatpickr-right"
         />
-
         <div className="pointer-events-none absolute inset-0 left-auto right-5 flex items-center">
           <svg
             width="18"

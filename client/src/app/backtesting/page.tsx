@@ -5,6 +5,7 @@ import React from "react";
 import { useSearchParams } from "next/navigation";
 import DefaultLayout from "@/components/Layouts/DefaultLayout";
 import BacktestingPage from "@/components/Backtesting/BacktestingPage";
+import BacktestingPage1 from "@/components/Backtesting/BacktestingPage1";
 
 const BacktestingHomePage: React.FC = () => {
   const searchParams = useSearchParams();

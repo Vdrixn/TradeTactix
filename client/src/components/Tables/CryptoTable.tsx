@@ -61,19 +61,21 @@ const CryptoTable = () => {
   return (
     <div className="w-full rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
-        Crypto Listing
+        Listado de Criptomonedas
       </h4>
 
       <table className="mb-4 w-full table-auto border-collapse">
         <thead>
           <tr className="bg-gray-2 dark:bg-meta-4">
-            <th className="p-2.5 text-left xl:p-5">Symbol</th>
-            <th className="p-2.5 text-left xl:p-5">Name</th>
-            <th className="p-2.5 text-left xl:p-5">Current Price</th>
-            <th className="p-2.5 text-left xl:p-5">24h Change</th>
-            <th className="p-2.5 text-left xl:p-5">7d Change</th>
-            <th className="p-2.5 text-left xl:p-5">Market Cap</th>
-            <th className="p-2.5 text-left xl:p-5">7d Preview</th>
+            <th className="p-2.5 text-left xl:p-5">Símbolo</th>
+            <th className="p-2.5 text-left xl:p-5">Nombre</th>
+            <th className="p-2.5 text-left xl:p-5">Precio Actual</th>
+            <th className="p-2.5 text-left xl:p-5">Cambio 24h</th>
+            <th className="p-2.5 text-left xl:p-5">Cambio 7d</th>
+            <th className="p-2.5 text-left xl:p-5">
+              Capitalización de Mercado
+            </th>
+            <th className="p-2.5 text-left xl:p-5">Vista previa 7d</th>
           </tr>
         </thead>
         <tbody>
@@ -93,7 +95,7 @@ const CryptoTable = () => {
                   />
                 </div>
                 <a
-                  href={`http://localhost:3000/backtesting?symbol=${crypto.symbol}`}
+                  href={`http://localhost:3000/backtesting?symbol=${crypto.symbol}&type=1`}
                   className="text-blue-500 hover:underline"
                 >
                   {crypto.symbol}
@@ -118,7 +120,7 @@ const CryptoTable = () => {
         </tbody>
       </table>
 
-      <div className="flex items-center justify-center space-x-3">
+      <div className="mb-2 flex items-center justify-center space-x-3">
         <select
           className="border-gray-300 rounded-md border px-2 py-1"
           value={entriesPerPage}
@@ -129,18 +131,18 @@ const CryptoTable = () => {
           <option value="25">25</option>
         </select>
         <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 lg:px-5 xl:px-6"
           onClick={handlePrevPage}
           disabled={currentPage === 1 || loading}
         >
-          &laquo; Prev
+          &laquo; Anterior
         </button>
         <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 lg:px-5 xl:px-6"
           onClick={handleNextPage}
           disabled={!hasMore || loading}
         >
-          Next &raquo;
+          Siguiente &raquo;
         </button>
       </div>
     </div>

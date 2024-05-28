@@ -1,9 +1,10 @@
-import Image from "next/image";
+"use client";
+
 import { useEffect, useState } from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 
 const ForexTable = () => {
-  const [cryptos, setCryptos] = useState([]);
+  const [forex, setForex] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -14,14 +15,14 @@ const ForexTable = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `http://127.0.0.1:8080/crypto_listings?page=${currentPage}&limit=${entriesPerPage}`,
+          `http://127.0.0.1:8080/forex_listings?page=${currentPage}&limit=${entriesPerPage}`,
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
         const data = await response.json();
         setHasMore(data.length === entriesPerPage);
-        setCryptos(data); // Aquí reemplazamos los datos existentes por los nuevos
+        setForex(data);
       } catch (error) {
         console.error("There was an error!", error);
       } finally {
@@ -46,10 +47,11 @@ const ForexTable = () => {
 
   const handleSetEntriesPerPage = (event) => {
     setEntriesPerPage(Number(event.target.value));
-    setCurrentPage(1);
+    setCurrentPage(1); // Reiniciar la página a la primera cuando cambia el límite
   };
 
   const renderChange = (change) => {
+    if (change === "-") return "-";
     const isPositive = change >= 0;
     return (
       <span style={{ color: isPositive ? "green" : "red" }}>
@@ -61,39 +63,42 @@ const ForexTable = () => {
   return (
     <div className="w-full rounded-sm border border-stroke bg-white px-5 pb-2.5 pt-6 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:pb-1">
       <h4 className="mb-6 text-xl font-semibold text-black dark:text-white">
-        Forex Listing
+        Lista de Forex
       </h4>
 
       <table className="mb-4 w-full table-auto border-collapse">
         <thead>
           <tr className="bg-gray-2 dark:bg-meta-4">
-            <th className="p-2.5 text-left xl:p-5">Symbol</th>
-            <th className="p-2.5 text-left xl:p-5">Name</th>
-            <th className="p-2.5 text-left xl:p-5">Current Price</th>
-            <th className="p-2.5 text-left xl:p-5">24h Change</th>
-            <th className="p-2.5 text-left xl:p-5">7d Change</th>
-            <th className="p-2.5 text-left xl:p-5">Market Cap</th>
-            <th className="p-2.5 text-left xl:p-5">7d Preview</th>
+            <th className="p-2.5 text-left xl:p-5">Divisas</th>
+            <th className="p-2.5 text-left xl:p-5">Precio Actual</th>
+            <th className="p-2.5 text-left xl:p-5">Cambio 24h</th>
+            <th className="p-2.5 text-left xl:p-5">Cambio 7d</th>
+            <th className="p-2.5 text-left xl:p-5">Vista 7d</th>
           </tr>
         </thead>
         <tbody>
-          {cryptos.map((crypto, key) => (
+          {forex.map((forexPair, key) => (
             <tr
               key={key}
               className="border-b border-stroke dark:border-strokedark"
             >
-              <td className="p-2.5 xl:p-5">{crypto.symbol}</td>
-              <td className="p-2.5 xl:p-5">{crypto.name}</td>
-              <td className="p-2.5 xl:p-5">${crypto.current_price}</td>
+              <td className="flex items-center p-2.5 xl:p-5">
+                <a
+                  href={`http://localhost:3000/backtesting?symbol=${forexPair.name}&type=3`}
+                  className="text-blue-500 hover:underline"
+                >
+                  {forexPair.name}
+                </a>
+              </td>
+              <td className="p-2.5 xl:p-5">{forexPair.current_price}</td>
               <td className="p-2.5 xl:p-5">
-                {renderChange(crypto.price_change_24h)}
+                {renderChange(forexPair.price_change_24h)}
               </td>
               <td className="p-2.5 xl:p-5">
-                {renderChange(crypto.price_change_7d)}
+                {renderChange(forexPair.price_change_7d)}
               </td>
-              <td className="p-2.5 xl:p-5">${crypto.market_cap}</td>
               <td className="whitespace-nowrap p-2.5 xl:p-5">
-                <Sparklines data={crypto.sparkline}>
+                <Sparklines data={forexPair.sparkline}>
                   <SparklinesLine color="green" />
                 </Sparklines>
               </td>
@@ -102,30 +107,29 @@ const ForexTable = () => {
         </tbody>
       </table>
 
-      <div className="flex items-center justify-center space-x-3">
+      <div className="mb-2 flex items-center justify-center space-x-3">
         <select
           className="border-gray-300 rounded-md border px-2 py-1"
           value={entriesPerPage}
-          onChange={(e) => setEntriesPerPage(Number(e.target.value))}
+          onChange={handleSetEntriesPerPage}
         >
           <option value="10">10</option>
           <option value="15">15</option>
-          <option value="30">30</option>
-          <option value="50">50</option>
+          <option value="25">25</option>
         </select>
         <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 lg:px-5 xl:px-6"
           onClick={handlePrevPage}
           disabled={currentPage === 1 || loading}
         >
-          &laquo; Prev
+          &laquo; Anterior
         </button>
         <button
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 lg:px-5 xl:px-6"
           onClick={handleNextPage}
           disabled={!hasMore || loading}
         >
-          Next &raquo;
+          Siguiente &raquo;
         </button>
       </div>
     </div>

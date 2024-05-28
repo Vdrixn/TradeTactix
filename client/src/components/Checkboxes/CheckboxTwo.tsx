@@ -1,29 +1,43 @@
 import { useState } from "react";
 
-const CheckboxTwo = () => {
+interface CheckboxTwoProps {
+  value: string;
+  label: string;
+  onChange: (value: string, isChecked: boolean) => void;
+}
+
+const CheckboxTwo: React.FC<CheckboxTwoProps> = ({
+  value,
+  label,
+  onChange,
+}) => {
   const [isChecked, setIsChecked] = useState<boolean>(false);
+
+  const handleChange = () => {
+    setIsChecked(!isChecked);
+    onChange(value, !isChecked);
+  };
 
   return (
     <div>
       <label
-        htmlFor="checkboxLabelTwo"
+        htmlFor={`checkbox-${value}`}
         className="flex cursor-pointer select-none items-center"
       >
         <div className="relative">
           <input
             type="checkbox"
-            id="checkboxLabelTwo"
+            id={`checkbox-${value}`}
             className="sr-only"
-            onChange={() => {
-              setIsChecked(!isChecked);
-            }}
+            onChange={handleChange}
+            checked={isChecked}
           />
           <div
             className={`mr-4 flex h-5 w-5 items-center justify-center rounded border ${
-              isChecked && "border-primary bg-gray dark:bg-transparent"
+              isChecked ? "border-primary bg-gray dark:bg-transparent" : ""
             }`}
           >
-            <span className={`opacity-0 ${isChecked && "!opacity-100"}`}>
+            <span className={`opacity-0 ${isChecked ? "!opacity-100" : ""}`}>
               <svg
                 width="11"
                 height="8"
@@ -41,7 +55,7 @@ const CheckboxTwo = () => {
             </span>
           </div>
         </div>
-        Checkbox Text
+        {label}
       </label>
     </div>
   );
