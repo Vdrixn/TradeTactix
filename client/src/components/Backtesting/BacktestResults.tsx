@@ -5,16 +5,15 @@ import ChartOne from "@/components/Charts/ChartOne";
 interface BacktestResultsProps {
   results: {
     summary: {
-      final_portfolio_value: number;
-      total_return: number;
+      final_capital: number;
+      unrealized_pnl: number;
+      num_positions: number;
       num_trades: number;
       winning_trades: number;
       losing_trades: number;
       max_drawdown: number;
       max_increase: number;
       average_duration: number;
-      num_positions: number;
-      initial_capital: number;
     };
     signals: any;
     portfolio: any;
@@ -22,9 +21,7 @@ interface BacktestResultsProps {
 }
 
 const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
-  const filteredSignalKeys = Object.keys(results.signals.price).filter(
-    (key) => results.signals.signal?.[key] !== 0,
-  );
+  const summary = results.summary;
 
   const portfolioData = Object.keys(results.portfolio.total).map((key) => ({
     time: key, // Mantener la fecha como string ISO
@@ -36,12 +33,13 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
     value: results.portfolio.hold[key],
   }));
 
-  const summary = results.summary;
+  const filteredSignalKeys = Object.keys(results.signals.price).filter(
+    (key) => results.signals.signal?.[key] !== 0,
+  );
 
   const filteredSignals = filteredSignalKeys.filter(
     (key) =>
-      results.signals.positions[key] > 0 ||
-      results.signals.positions[key] < 0,
+      results.signals.positions[key] > 0 || results.signals.positions[key] < 0,
   );
 
   return (
@@ -56,66 +54,73 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <CardDataStats
             title="Capital Final"
-            total={`$${summary.final_portfolio_value.toFixed(2)}`}
-            rate={`${(summary.total_return * 100).toFixed(2)}$`}
-            levelUp={summary.total_return > summary.initial_capital}
-            levelDown={summary.total_return < summary.initial_capital}
+            total={`$${summary.final_capital.toFixed(2)}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">💰</span>
           </CardDataStats>
           <CardDataStats
+            title="Capital Invertido"
+            total={`$${summary.unrealized_pnl.toFixed(2)}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">💹</span>
+          </CardDataStats>
+          <CardDataStats
+            title="Total"
+            total={`$${(summary.final_capital + summary.unrealized_pnl).toFixed(2)}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">📈</span>
+          </CardDataStats>
+          <CardDataStats
+            title="Posiciones Abiertas"
+            total={`${summary.num_positions}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">🛒</span>
+          </CardDataStats>
+          <CardDataStats
             title="Total de Transacciones"
             total={`${summary.num_trades}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">💵</span>
           </CardDataStats>
           <CardDataStats
             title="Transacciones Ganadoras"
             total={`${summary.winning_trades}`}
-            rate={`${((summary.winning_trades / summary.num_trades) * 100).toFixed(2)}%`}
-            levelUp
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">🏆</span>
           </CardDataStats>
           <CardDataStats
             title="Transacciones Perdedoras"
             total={`${summary.losing_trades}`}
-            rate={`${((summary.losing_trades / summary.num_trades) * 100).toFixed(2)}%`}
-            levelDown
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">💔</span>
           </CardDataStats>
           <CardDataStats
-            title="Posiciones Abiertas"
-            total={`${summary.num_positions}`}
-            rate=""
-            levelDown
+            title="Duración Promedio de Operaciones"
+            total={`${summary.average_duration.toFixed(2)} días`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
-            <span className="text-black dark:text-white">🛒</span>
+            <span className="text-black dark:text-white">⏱️</span>
           </CardDataStats>
           <CardDataStats
             title="Máximo Decrecimiento"
             total={`${(summary.max_drawdown * 100).toFixed(2)}%`}
-            rate=""
-            levelDown
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">📉</span>
           </CardDataStats>
           <CardDataStats
             title="Máximo Incremento"
             total={`${(summary.max_increase * 100).toFixed(2)}%`}
-            rate=""
-            levelUp
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">📈</span>
-          </CardDataStats>
-          <CardDataStats
-            title="Duración Promedio de Operaciones"
-            total={`${summary.average_duration.toFixed(2)} días`}
-            rate=""
-            levelUp
-          >
-            <span className="text-black dark:text-white">⏱️</span>
           </CardDataStats>
         </div>
       </div>
