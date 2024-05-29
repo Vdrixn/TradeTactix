@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pycoingecko import CoinGeckoAPI
 import yfinance as yf
 import pandas as pd
+import numpy as np
 import csv
 import math
 
@@ -119,8 +120,9 @@ def api_forex_symbols():
 
 # Endpoints para listado de activos financieros
 
-
 # ------------------------Criptomonedas-------------------
+
+
 def __get_crypto_data_from_api(cache_page):
     start_index = cache_page * 50
     coins = cg.get_coins_markets(
@@ -633,7 +635,7 @@ def __get_Stocks_Forex_historical_data(symbol, interval, start_date, end_date):
         raise ValueError(
             "No se han encontrado datos para el símbolo y el rango de fechas proporcionados"
         )
-    return hist[["Close"]]
+    return hist[["Open", "High", "Low", "Close"]]
 
 
 def __get_crypto_historical_data(symbol, interval, start_date, end_date):
@@ -652,7 +654,7 @@ def __get_crypto_historical_data(symbol, interval, start_date, end_date):
         raise ValueError(
             "No se han encontrado datos para el símbolo y el rango de fechas proporcionados"
         )
-    return hist[["Close"]]
+    return hist[['Open', 'High', 'Low', 'Close']] 
 
 
 def calculate_stop_loss_take_profit(
@@ -954,7 +956,7 @@ def generate_algorithm():
 
     # Preparamos la consulta para la API de OpenAI incluyendo las instrucciones del usuario.
     prompt = (
-        f"Crear un algoritmo de trading que cumpla con las siguientes instrucciones:\n"
+        "Crear un algoritmo de trading que cumpla con las siguientes instrucciones:\n\n"
         f"{instructions}\n\n"
         "El Algoritmo debe incluir únicamente la función generate_signals(data) que recibe un DataFrame con los precios. "
         "Debe retornar un DataFrame.\n\n"
@@ -966,14 +968,22 @@ def generate_algorithm():
         "- Valores < 0: posición corta (venta).\n"
         "- Valores = 0: sin operación.\n\n"
         "4. Devolución del DataFrame:\nreturn signals\n\n"
-        "Por favor, proporciona solo el código de la función, no incluyas los import. Incluye comentarios explicativos en el codigo."
+        "Están disponibles las siguientes librerías:\n"
+        "- pandas as pd\n"
+        "- numpy as np\n\n"
+        "La estructura del DataFrame 'data' es la siguiente:\n"
+        "- Columna 'Close': precio de cierre.\n"
+        "- Columna 'High': precio máximo.\n"
+        "- Columna 'Low': precio mínimo.\n"
+        "- Columna 'Open': precio de apertura.\n\n"
+        "Por favor, proporciona solo el código de la función, no incluyas los import. Incluye comentarios explicativos en el código."
     )
 
     # Realizamos la consulta a la API de OpenAI
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
-            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Authorization": "Bearer sk-proj-fvWacwpnqYYfG1HAM5t4T3BlbkFJIz7oBhwcUYcmDbHBvqxE",
             "Content-Type": "application/json",
         },
         json={

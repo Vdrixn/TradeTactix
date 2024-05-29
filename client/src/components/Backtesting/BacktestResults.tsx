@@ -64,6 +64,13 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
             <span className="text-black dark:text-white">💰</span>
           </CardDataStats>
           <CardDataStats
+            title="Capital Final Estrategia"
+            total={`$${(summary.final_capital + summary.unrealized_pnl).toFixed(2)}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">📈</span>
+          </CardDataStats>
+          <CardDataStats
             title="Capital Final"
             total={`$${summary.final_capital.toFixed(2)}`}
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
@@ -76,13 +83,6 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">💹</span>
-          </CardDataStats>
-          <CardDataStats
-            title="Total"
-            total={`$${(summary.final_capital + summary.unrealized_pnl).toFixed(2)}`}
-            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
-          >
-            <span className="text-black dark:text-white">📈</span>
           </CardDataStats>
           <CardDataStats
             title="Posiciones Abiertas"
@@ -118,6 +118,13 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">⏱️</span>
+          </CardDataStats>
+          <CardDataStats
+            title="Diferencia Estrategia frente a Mercado"
+            total={`${(((summary.final_capital + summary.unrealized_pnl - lastHoldValue) / lastHoldValue) * 100).toFixed(2)}%`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">📊</span>
           </CardDataStats>
           <CardDataStats
             title="Máximo Decrecimiento"

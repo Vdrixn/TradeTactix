@@ -209,7 +209,17 @@ signals['positions'] = ...
 - Valores = 0: sin operación.
 
 4. Devolución del DataFrame:
-return signals`}
+return signals
+
+Están disponibles las siguientes siguientes librerías:
+- pandas as pd
+- numpy as np
+
+La estructura del DataFrame 'data' es la siguiente:
+- Columna 'Close': precio de cierre.
+- Columna 'High': precio máximo.
+- Columna 'Low': precio mínimo.
+- Columna 'Open': precio de apertura.`}
                 className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 value={algorithm}
                 onChange={(e) => setAlgorithm(e.target.value)}
