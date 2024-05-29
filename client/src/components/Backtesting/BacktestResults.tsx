@@ -42,6 +42,10 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
       results.signals.positions[key] > 0 || results.signals.positions[key] < 0,
   );
 
+  // Obtener el último valor de portfolioData.hold
+  const lastHoldValue =
+    holdData.length > 0 ? holdData[holdData.length - 1].value : 0;
+
   return (
     <div className="flex flex-col gap-5">
       <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -52,6 +56,13 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
 
       <div className="mt-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <CardDataStats
+            title="Capital Final Comprar y Mantener"
+            total={`$${lastHoldValue.toFixed(2)}`}
+            className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
+          >
+            <span className="text-black dark:text-white">💰</span>
+          </CardDataStats>
           <CardDataStats
             title="Capital Final"
             total={`$${summary.final_capital.toFixed(2)}`}

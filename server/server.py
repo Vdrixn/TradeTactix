@@ -1,10 +1,10 @@
 from flask import Flask, jsonify, request
+import requests
 from flask_cors import CORS
 from datetime import datetime, timedelta
 from pycoingecko import CoinGeckoAPI
 import yfinance as yf
 import pandas as pd
-import numpy as np
 import csv
 import math
 
@@ -12,6 +12,8 @@ app = Flask(__name__)
 CORS(app)
 cg = CoinGeckoAPI()
 cache_timeout = timedelta(minutes=5)
+# Configura tu clave de API de OpenAI
+
 
 # Cachés de datos
 crypto_cache = {}
@@ -939,6 +941,65 @@ def backtest_endpoint():
     print("trade_amount", trade_amount)
     # Devolvemos los resultados del backtest
     return jsonify(results)
+
+# ---------------------------------------------------------------------------
+
+OPENAI_API_KEY = "sk-proj-fvWacwpnqYYfG1HAM5t4T3BlbkFJIz7oBhwcUYcmDbHBvqxE"
+
+# Endpoint para obtener la respuesta de OpenAI
+
+@app.route("/api/generate-algorithm", methods=["POST"])
+def generate_algorithm():
+    # Extrae las instrucciones del cuerpo de la solicitud
+    data = request.get_json()
+    instructions = data.get("instructions", "")
+    print("Instrucciones:", instructions)
+
+    # Prepara la consulta para la API de OpenAI en español
+    prompt = (
+        f"Crear un algoritmo de trading que cumpla con las siguientes instrucciones:\n"
+        f"{instructions}\n\n"
+        "El Algoritmo debe incluir únicamente la función generate_signals(data) que recibe un DataFrame con los precios. "
+        "Debe retornar un DataFrame.\n\n"
+        "Requisitos Obligatorios:\n"
+        "1. Definición de la función:\ndef generate_signals(data):\n\n"
+        "2. Creación de la estructura de datos:\nsignals = pd.DataFrame(index=data.index)\n\n"
+        "3. Columna obligatoria 'positions':\nsignals['positions'] = ...\n"
+        "- Valores > 0: posición larga (compra).\n"
+        "- Valores < 0: posición corta (venta).\n"
+        "- Valores = 0: sin operación.\n\n"
+        "4. Devolución del DataFrame:\nreturn signals\n\n"
+        "Por favor, proporciona solo el código de la función, no incluyas los import."
+    )
+
+    # Realiza la consulta a la API de OpenAI
+    response = requests.post(
+        "https://api.openai.com/v1/chat/completions",
+        headers={
+            "Authorization": f"Bearer {OPENAI_API_KEY}",
+            "Content-Type": "application/json",
+        },
+        json={
+            "model": "gpt-3.5-turbo",
+            "messages": [{"role": "user", "content": prompt}],
+            "max_tokens": 300,
+            "n": 1,
+            "stop": ["\n\n"],
+        },
+    )
+
+    print("Código de estado de la respuesta:", response.status_code)
+    print("Contenido de la respuesta:", response.text)
+
+    if response.status_code == 200:
+        # Extrae la respuesta completa de la API
+        chatgpt_response = response.json()["choices"][0]["message"]["content"].strip()
+        print("Respuesta de OpenAI:", chatgpt_response)
+        return jsonify({"codigo": chatgpt_response})
+    else:
+        return jsonify(
+            {"error": "Failed to generate algorithm", "details": response.text}
+        ), 500
 
 
 if __name__ == "__main__":

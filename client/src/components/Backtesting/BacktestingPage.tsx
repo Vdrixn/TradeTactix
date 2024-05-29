@@ -182,18 +182,18 @@ const BacktestingPage: React.FC = () => {
       <div className="flex flex-row">
         <div className="w-3/4 p-4">
           <div
-  className="mb-4 flex flex-col justify-between rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
-  style={{ minHeight: "100%" }}
->
-  <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
-    <h3 className="text-gray-200 text-xl font-medium">
-      Escribir Algoritmo
-    </h3>
-  </div>
-  <div className="flex flex-grow flex-col gap-5.5 p-6.5">
-    <textarea
-      rows={6}
-      placeholder={`El Algoritmo debe incluir únicamente la funcion generate_signals(data) que recibe un DataFrame con los precios. Debe retornar un DataFrame.
+            className="mb-4 flex flex-col justify-between rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
+            style={{ minHeight: "100%" }}
+          >
+            <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
+              <h3 className="text-gray-200 text-xl font-medium">
+                Escribir Algoritmo
+              </h3>
+            </div>
+            <div className="flex flex-grow flex-col gap-5.5 p-6.5">
+              <textarea
+                rows={6}
+                placeholder={`El Algoritmo debe incluir únicamente la funcion generate_signals(data) que recibe un DataFrame con los precios. Debe retornar un DataFrame.
 
 Requisitos Obligatorios:
 1. Definición de la función:
@@ -210,12 +210,12 @@ signals['positions'] = ...
 
 4. Devolución del DataFrame:
 return signals`}
-      className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-      value={algorithm}
-      onChange={(e) => setAlgorithm(e.target.value)}
-    ></textarea>
-  </div>
-</div>
+                className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                value={algorithm}
+                onChange={(e) => setAlgorithm(e.target.value)}
+              ></textarea>
+            </div>
+          </div>
         </div>
 
         <div className="w-1/4 p-4">
