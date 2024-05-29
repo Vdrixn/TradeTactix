@@ -96,7 +96,7 @@ const ConsultaAI: React.FC = () => {
             <textarea
               rows={6}
               placeholder={
-                "Escribe una descripción de lo que quieres que haga tu algoritmo"
+                "Escribe una descripción de lo que quieres que haga tu algoritmo. Por ejemplo, puedes detallar una estrategia de trading específica que te gustaría implementar, como un cruce de medias móviles, un indicador técnico o cualquier otra lógica de trading. Asegúrate de incluir todos los parámetros y condiciones necesarios para que el algoritmo funcione correctamente."
               }
               className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
               value={description}

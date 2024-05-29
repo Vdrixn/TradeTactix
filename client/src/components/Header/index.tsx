@@ -66,7 +66,7 @@ const Header = (props: {
           </Link>
         </div>
 
-        <div className="hidden sm:block">
+        {/* <div className="hidden sm:block">
           <form action="https://formbold.com/s/unique_form_id" method="POST">
             <div className="relative">
               <button className="absolute left-0 top-1/2 -translate-y-1/2">
@@ -100,26 +100,14 @@ const Header = (props: {
               />
             </div>
           </form>
-        </div>
+        </div> */}
 
-        <div className="flex items-center gap-3 2xsm:gap-7">
+        <div className="flex w-full items-center justify-end gap-3 2xsm:gap-7">
           <ul className="flex items-center gap-2 2xsm:gap-4">
             {/* <!-- Dark Mode Toggler --> */}
             <DarkModeSwitcher />
             {/* <!-- Dark Mode Toggler --> */}
-
-            {/* <!-- Notification Menu Area --> */}
-            <DropdownNotification />
-            {/* <!-- Notification Menu Area --> */}
-
-            {/* <!-- Chat Notification Area --> */}
-            <DropdownMessage />
-            {/* <!-- Chat Notification Area --> */}
           </ul>
-
-          {/* <!-- User Area --> */}
-          <DropdownUser />
-          {/* <!-- User Area --> */}
         </div>
       </div>
     </header>

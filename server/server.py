@@ -718,7 +718,6 @@ def backtest(
             tp_price = position["tp_price"]
             direction = position["direction"]
             current_price = data.loc[date, "Close"]
-                
 
             if (direction == 1 and current_price <= sl_price) or (
                 direction == -1 and current_price >= sl_price
@@ -735,7 +734,6 @@ def backtest(
                 trade_durations.append(trade_duration)
                 current_cash += trade_amount * risk_reward_ratio
                 open_positions.remove(position)
-
 
         entry_price = data.loc[date, "Close"]
         # Verificar si hay efectivo suficiente para abrir nuevas posiciones
@@ -942,20 +940,19 @@ def backtest_endpoint():
     # Devolvemos los resultados del backtest
     return jsonify(results)
 
-# ---------------------------------------------------------------------------
 
-OPENAI_API_KEY = "sk-proj-fvWacwpnqYYfG1HAM5t4T3BlbkFJIz7oBhwcUYcmDbHBvqxE"
+# ---------------------------------------------------------------------------
 
 # Endpoint para obtener la respuesta de OpenAI
 
+
 @app.route("/api/generate-algorithm", methods=["POST"])
 def generate_algorithm():
-    # Extrae las instrucciones del cuerpo de la solicitud
+    # Extraemos las instrucciones del cuerpo de la solicitud
     data = request.get_json()
     instructions = data.get("instructions", "")
-    print("Instrucciones:", instructions)
 
-    # Prepara la consulta para la API de OpenAI en español
+    # Preparamos la consulta para la API de OpenAI incluyendo las instrucciones del usuario.
     prompt = (
         f"Crear un algoritmo de trading que cumpla con las siguientes instrucciones:\n"
         f"{instructions}\n\n"
@@ -969,10 +966,10 @@ def generate_algorithm():
         "- Valores < 0: posición corta (venta).\n"
         "- Valores = 0: sin operación.\n\n"
         "4. Devolución del DataFrame:\nreturn signals\n\n"
-        "Por favor, proporciona solo el código de la función, no incluyas los import."
+        "Por favor, proporciona solo el código de la función, no incluyas los import. Incluye comentarios explicativos en el codigo."
     )
 
-    # Realiza la consulta a la API de OpenAI
+    # Realizamos la consulta a la API de OpenAI
     response = requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
@@ -988,19 +985,26 @@ def generate_algorithm():
         },
     )
 
-    print("Código de estado de la respuesta:", response.status_code)
-    print("Contenido de la respuesta:", response.text)
-
     if response.status_code == 200:
-        # Extrae la respuesta completa de la API
+        # Recuperamos la respuesta completa de la API.
         chatgpt_response = response.json()["choices"][0]["message"]["content"].strip()
-        print("Respuesta de OpenAI:", chatgpt_response)
+
+        # Eliminamos las etiquetas de código ("```python" y "```") si están presentes.
+        if chatgpt_response.startswith("```python"):
+            chatgpt_response = chatgpt_response[9:].strip()
+        if chatgpt_response.endswith("```"):
+            chatgpt_response = chatgpt_response[:-3].strip()
+
+        # Devolvemos la respuesta generada por OpenAI.
         return jsonify({"codigo": chatgpt_response})
     else:
+        # Devolvemos un mensaje de error si la solicitud falló.
         return jsonify(
             {"error": "Failed to generate algorithm", "details": response.text}
         ), 500
 
+
+# ----------------------------------------------------------------------------
 
 if __name__ == "__main__":
     initialize_crypto_symbols()  # Cargar símbolos de criptomonedas al iniciar
