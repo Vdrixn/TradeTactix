@@ -56,7 +56,7 @@ const BacktestingPage: React.FC = () => {
   const [alertMessage, setAlertMessage] = useState<string>("");
 
   useEffect(() => {
-    if (typeof window !== "undefined" && symbol) {
+    if (symbol) {
       fetch(`http://127.0.0.1:8080/api/summary?symbol=${symbol}`)
         .then((res) => res.json())
         .then((data) => setSummary(data))
@@ -183,7 +183,9 @@ const BacktestingPage: React.FC = () => {
               className="flex flex-col gap-5.5 p-6.5"
               style={{ height: "550px" }}
             >
-              <TradingViewWidget symbol={symbol} indicador={type} />
+              {typeof window !== "undefined" && (
+                <TradingViewWidget symbol={symbol} indicador={type} />
+              )}
             </div>
           </div>
         </div>
