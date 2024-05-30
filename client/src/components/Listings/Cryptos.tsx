@@ -2,7 +2,6 @@
 import React from "react";
 import CryptoTable from "../Tables/CryptoTable";
 import CardDataStats from "../CardDataStats";
-import MapOne from "../Maps/MapOne";
 
 const Cryptos: React.FC = () => {
   return (

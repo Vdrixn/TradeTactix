@@ -2,7 +2,6 @@
 import React from "react";
 import ForexTable from "../Tables/ForexTable";
 import CardDataStats from "../CardDataStats";
-import MapOne from "../Maps/MapOne";
 
 const Forex: React.FC = () => {
   return (

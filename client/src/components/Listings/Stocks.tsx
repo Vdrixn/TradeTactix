@@ -2,7 +2,6 @@
 import React from "react";
 import StocksTable from "../Tables/StocksTable";
 import CardDataStats from "../CardDataStats";
-import MapOne from "../Maps/MapOne";
 
 const Stocks: React.FC = () => {
   return (
