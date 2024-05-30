@@ -1,3 +1,23 @@
+import React, { useEffect, useRef, useState } from "react";
+import {
+  createChart,
+  IChartApi,
+  ISeriesApi,
+  UTCTimestamp,
+} from "lightweight-charts";
+
+interface ChartProps {
+  symbol: string;
+}
+
+interface CandleData {
+  time: UTCTimestamp;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+}
+
 const Chart: React.FC<ChartProps> = ({ symbol }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
