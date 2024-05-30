@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import DatePickerOne from "@/components/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
 import TradingViewWidget from "@/components/Charts/TradingViewWidget";
@@ -21,9 +22,9 @@ const formatDate = (date: Date): string => {
 };
 
 const BacktestingPage: React.FC = () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const symbol = urlParams.get("symbol") || "";
-  const type = urlParams.get("type") || "";
+  const searchParams = useSearchParams();
+  const symbol = searchParams.get("symbol");
+  const type = searchParams.get("type");
 
   const today = new Date();
   const oneYearAgo = new Date();
