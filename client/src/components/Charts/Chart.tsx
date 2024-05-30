@@ -1,18 +1,3 @@
-import React, { useEffect, useRef, useState } from "react";
-import { createChart, IChartApi, ISeriesApi } from "lightweight-charts";
-
-interface ChartProps {
-  symbol: string;
-}
-
-interface CandleData {
-  time: number;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-}
-
 const Chart: React.FC<ChartProps> = ({ symbol }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -46,7 +31,11 @@ const Chart: React.FC<ChartProps> = ({ symbol }) => {
       )
         .then((res) => res.json())
         .then((data: CandleData[]) => {
-          candleSeries.setData(data);
+          const formattedData = data.map((item) => ({
+            ...item,
+            time: item.time as UTCTimestamp, // Convertir a UTCTimestamp
+          }));
+          candleSeries.setData(formattedData);
         })
         .catch((err) => console.error("Error fetching chart data:", err));
 
