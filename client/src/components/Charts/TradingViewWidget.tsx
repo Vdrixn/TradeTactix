@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, memo } from "react";
+import React, { useEffect, useRef } from "react";
 
 interface TradingViewWidgetProps {
   symbol: string;
@@ -12,9 +12,11 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
   const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const containerElement = container.current;
 
-    let formattedSymbol: string;
+    let formattedSymbol;
     switch (indicador) {
       case "1":
         formattedSymbol = `BINANCE:${symbol}USDT`;
@@ -48,14 +50,10 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
       support_host: "https://www.tradingview.com",
     });
 
-    if (containerElement) {
-      containerElement.appendChild(script);
-    }
+    containerElement?.appendChild(script);
 
     return () => {
-      if (containerElement) {
-        containerElement.innerHTML = ""; // Limpia el script al desmontar el componente
-      }
+      containerElement?.innerHTML = ""; // Limpia el script al desmontar el componente
     };
   }, [symbol, indicador]);
 
@@ -69,17 +67,8 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
         className="tradingview-widget-container__widget"
         style={{ height: "100%", width: "100%" }}
       ></div>
-      <div className="tradingview-widget-copyright">
-        <a
-          href="https://www.tradingview.com/"
-          rel="noopener nofollow"
-          target="_blank"
-        >
-          <span className="blue-text">Track all markets on TradingView</span>
-        </a>
-      </div>
     </div>
   );
 };
 
-export default memo(TradingViewWidget);
+export default TradingViewWidget;

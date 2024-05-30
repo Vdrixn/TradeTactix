@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import DatePickerOne from "@/components/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
-import TradingViewWidget from "@/components/Charts/TradingViewWidget";
+import dynamic from "next/dynamic";
 import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
+
+const TradingViewWidget = dynamic(
+  () => import("@/components/Charts/TradingViewWidget"),
+  {
+    ssr: false,
+  },
+);
 
 interface Summary {
   name?: string;
