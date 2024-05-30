@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, memo } from "react";
 
-function TradingViewWidget({ symbol, indicador }) {
+function TradingViewWidget1({ symbol, indicador }) {
   const container = useRef(null);
 
   useEffect(() => {
@@ -35,6 +35,7 @@ function TradingViewWidget({ symbol, indicador }) {
       locale: "en",
       hide_side_toolbar: false,
       allow_symbol_change: false,
+      details: true,
       calendar: false,
       support_host: "https://www.tradingview.com",
     });
@@ -69,4 +70,4 @@ function TradingViewWidget({ symbol, indicador }) {
   );
 }
 
-export default memo(TradingViewWidget);
+export default memo(TradingViewWidget1);

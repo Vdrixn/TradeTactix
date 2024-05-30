@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
+import DatePickerOne from "@/components/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
-import TradingViewWidget1 from "@/components/Charts/TradingViewWidget1";
+import TradingViewWidget from "@/components/Charts/TradingViewWidget";
 import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
 
 interface Summary {
@@ -173,7 +173,7 @@ const BacktestingPage: React.FC = () => {
               className="flex flex-col gap-5.5 p-6.5"
               style={{ height: "550px" }}
             >
-              <TradingViewWidget1 symbol={symbol} indicador={type} />
+              <TradingViewWidget symbol={symbol} indicador={type} />
             </div>
           </div>
         </div>

@@ -12,7 +12,7 @@ import math
 app = Flask(__name__)
 CORS(app)
 cg = CoinGeckoAPI()
-cache_timeout = timedelta(minutes=5)
+cache_timeout = timedelta(minutes=1)
 # Configura tu clave de API de OpenAI
 
 
@@ -118,7 +118,7 @@ def api_forex_symbols():
 
 # ---------------------------------------------------------------------------
 
-# Endpoints para listado de activos financieros
+""" # Endpoints para listado de activos financieros
 
 # ------------------------Criptomonedas-------------------
 
@@ -323,6 +323,168 @@ def forex_listings():
         for index in range(start_index, end_index)
         if index in forex_cache
     ]
+    return jsonify(forex_data)
+
+
+# --------------------------------------------------------------------------- """
+
+# Endpoints para listado de activos financieros
+
+# ------------------------Criptomonedas-------------------
+
+
+def __get_crypto_data_from_api():
+    coins = cg.get_coins_markets(
+        vs_currency="usd",
+        order="market_cap_desc",
+        per_page=250,  # Obtener 250 criptomonedas de una vez
+        page=1,
+        sparkline=True,
+        price_change_percentage="7d",
+    )
+
+    crypto_cache.clear()
+    for index, coin in enumerate(coins):
+        crypto_info = {
+            "symbol": coin["symbol"].upper(),
+            "name": coin["name"],
+            "image": coin["image"],
+            "current_price": coin["current_price"],
+            "price_change_24h": round(coin["price_change_percentage_24h"], 2),
+            "price_change_7d": round(coin["price_change_percentage_7d_in_currency"], 2),
+            "market_cap": coin["market_cap"],
+            "sparkline": coin["sparkline_in_7d"]["price"]
+            if "sparkline_in_7d" in coin
+            else [],
+        }
+        crypto_cache[index] = {"timestamp": datetime.now(), "data": crypto_info}
+
+
+@app.route("/crypto_listings")
+def crypto_listings():
+    if not __is_cache_up_to_date(crypto_cache, 0):
+        __get_crypto_data_from_api()
+
+    crypto_data = [crypto_cache[index]["data"] for index in crypto_cache]
+    return jsonify(crypto_data)
+
+
+# ------------------------Acciones------------------------
+
+
+def __get_stocks_data_from_api():
+    try:
+        data = yf.download(all_stock_symbols, period="7d", group_by="ticker")
+    except Exception as e:
+        print(f"Error descargando datos para los símbolos: {e}")
+        return
+
+    stocks_cache.clear()
+    for index, symbol in enumerate(all_stock_symbols):
+        try:
+            if symbol not in data or len(data[symbol]) < 2:
+                continue
+
+            hist = data[symbol]
+            today_price = hist["Close"].iloc[-1]
+            if math.isnan(today_price):
+                continue
+
+            price_change_24h = (
+                (today_price - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100
+            )
+            price_change_7d = (
+                (today_price - hist["Close"].iloc[0]) / hist["Close"].iloc[0] * 100
+            )
+
+            stock = yf.Ticker(symbol)
+            stock_info = {
+                "symbol": symbol,
+                "name": stock.info.get("shortName", ""),
+                "current_price": round(today_price, 2),
+                "price_change_24h": round(price_change_24h, 2),
+                "price_change_7d": round(price_change_7d, 2),
+                "sparkline": hist["Close"].tolist(),
+                "market_cap": stock.info.get("marketCap", 0),
+            }
+            stocks_cache[index] = {
+                "timestamp": datetime.now(),
+                "data": stock_info,
+            }
+
+        except Exception as e:
+            print(f"Error procesando el símbolo {symbol}: {e}")
+
+
+@app.route("/stocks_listings")
+def stocks_listings():
+    if not __is_cache_up_to_date(stocks_cache, 0):
+        __get_stocks_data_from_api()
+
+    stocks_data = [stocks_cache[index]["data"] for index in stocks_cache]
+    return jsonify(stocks_data)
+
+
+# ------------------------Divisas-------------------------
+
+def __get_forex_data_from_api():
+    subset_symbols = all_forex_symbols
+    try:
+        data = yf.download(subset_symbols, period="7d", group_by="ticker")
+    except Exception as e:
+        print(f"Error descargando datos para los símbolos: {e}")
+        return
+
+    forex_cache.clear()
+    for index, symbol in enumerate(subset_symbols):
+        try:
+            if symbol not in data or len(data[symbol]) < 2:
+                continue
+
+            hist = data[symbol]
+            today_price = hist["Close"].iloc[-1]
+            if math.isnan(today_price):
+                continue
+
+            price_change_24h = (
+                (today_price - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100
+            )
+            price_change_7d = (
+                (today_price - hist["Close"].iloc[0]) / hist["Close"].iloc[0] * 100
+            )
+
+            stock = yf.Ticker(symbol)
+            stock_info = {
+                "symbol": symbol,
+                "name": stock.info.get("shortName", "-")
+                if stock.info.get("shortName")
+                else "-",
+                "current_price": today_price if not math.isnan(today_price) else "-",
+                "price_change_24h": round(price_change_24h, 2)
+                if not math.isnan(price_change_24h)
+                else "-",
+                "price_change_7d": round(price_change_7d, 2)
+                if not math.isnan(price_change_7d)
+                else "-",
+                "sparkline": [
+                    price for price in hist["Close"].tolist() if not math.isnan(price)
+                ],
+            }
+            forex_cache[index] = {
+                "timestamp": datetime.now(),
+                "data": stock_info,
+            }
+
+        except Exception as e:
+            print(f"Error procesando el símbolo {symbol}: {e}")
+
+
+@app.route("/forex_listings")
+def forex_listings():
+    if not __is_cache_up_to_date(forex_cache, 0):
+        __get_forex_data_from_api()
+
+    forex_data = [forex_cache[index]["data"] for index in forex_cache]
     return jsonify(forex_data)
 
 

@@ -1,4 +1,3 @@
-// src/app/backtesting/page.tsx
 "use client"; // Asegura que este componente se ejecute en el cliente
 
 import React from "react";
