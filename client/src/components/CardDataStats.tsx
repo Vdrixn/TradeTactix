@@ -6,14 +6,16 @@ interface CardDataStatsProps {
   rate?: string; // Hacer que rate sea opcional
   levelUp?: boolean;
   levelDown?: boolean;
+  className?: string;
   children: ReactNode;
 }
 
 const CardDataStats: React.FC<CardDataStatsProps> = ({
   title,
   total,
-  rate = "", // Valor predeterminado vacío para rate
+  rate = "",
   levelUp,
+  className = "",
   levelDown,
   children,
 }) => {
