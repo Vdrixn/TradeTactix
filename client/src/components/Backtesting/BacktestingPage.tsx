@@ -183,9 +183,7 @@ const BacktestingPage: React.FC = () => {
               className="flex flex-col gap-5.5 p-6.5"
               style={{ height: "550px" }}
             >
-              {typeof window !== "undefined" && (
-                <TradingViewWidget symbol={symbol} indicador={type} />
-              )}
+              <TradingViewWidget symbol={symbol} indicador={type} />
             </div>
           </div>
         </div>
