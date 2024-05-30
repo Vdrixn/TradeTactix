@@ -2,9 +2,22 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 
-const CryptoTable = () => {
-  const [cryptos, setCryptos] = useState([]);
-  const [filteredCryptos, setFilteredCryptos] = useState([]);
+// Definir la interfaz para los datos de criptomonedas
+interface CryptoData {
+  id: string;
+  name: string;
+  symbol: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  price_change_24h: number;
+  price_change_7d: number;
+  sparkline: number[];
+}
+
+const CryptoTable: React.FC = () => {
+  const [cryptos, setCryptos] = useState<CryptoData[]>([]);
+  const [filteredCryptos, setFilteredCryptos] = useState<CryptoData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -18,7 +31,7 @@ const CryptoTable = () => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        const data = await response.json();
+        const data: CryptoData[] = await response.json();
         setCryptos(data);
         setFilteredCryptos(data);
       } catch (error) {
@@ -56,12 +69,14 @@ const CryptoTable = () => {
     }
   };
 
-  const handleSetEntriesPerPage = (event) => {
+  const handleSetEntriesPerPage = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     setEntriesPerPage(Number(event.target.value));
     setCurrentPage(1);
   };
 
-  const renderChange = (change) => {
+  const renderChange = (change: number) => {
     const isPositive = change >= 0;
     return (
       <span style={{ color: isPositive ? "green" : "red" }}>
