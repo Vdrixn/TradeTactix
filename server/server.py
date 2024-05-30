@@ -22,12 +22,12 @@ stocks_cache = {}
 forex_cache = {}
 
 # Variables globales
-crypto_symbols_map = {}
-crypto_ids = {}  # Mapa para nombres y IDs de criptomonedas
+crypto_symbols_map = {} # Mapa para nombres y símbolos de criptomonedas
+crypto_ids = {}  # Mapa de IDs y simbolos de criptomonedas
 stocks_symbols_map = {}  # Mapa para nombres y símbolos de acciones
 forex_symbols_map = {}  # Mapa para nombres y símbolos de pares de divisas
 all_forex_symbols = []  # Lista solo de símbolos de divisas
-all_symbols = []  # Lista solo de símbolos de acciones
+all_stock_symbols = []  # Lista solo de símbolos de acciones
 
 # Funciones auxiliares
 
@@ -50,7 +50,7 @@ def get_coin_id(symbol):
 # Funciones de inicialización de datos
 
 
-def initialize_crypto_symbols(limit=250):  # Aumentado el límite para más criptomonedas
+def initialize_crypto_symbols(limit=250):
     global crypto_symbols_map, crypto_ids
     try:
         coins_list = cg.get_coins_markets(
@@ -67,7 +67,7 @@ def initialize_crypto_symbols(limit=250):  # Aumentado el límite para más crip
 
 
 def initialize_stock_symbols():
-    global stocks_symbols_map, all_symbols
+    global stocks_symbols_map, all_stock_symbols
     try:
         with open("data/stocks.csv", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile, delimiter=";")
@@ -75,7 +75,7 @@ def initialize_stock_symbols():
                 symbol = row["Symbol"]
                 name = row["Name"]
                 stocks_symbols_map[symbol] = name
-                all_symbols.append(symbol)
+                all_stock_symbols.append(symbol)
     except Exception as e:
         print(f"Error al inicializar los símbolos de acciones: {e}")
 
@@ -176,7 +176,7 @@ def crypto_listings():
 
 def __get_stocks_data_from_api(cache_page):
     start_index = cache_page * 25
-    subset_symbols = all_symbols[start_index:]
+    subset_symbols = all_stock_symbols[start_index:]
 
     try:
         data = yf.download(subset_symbols, period="7d", group_by="ticker")
