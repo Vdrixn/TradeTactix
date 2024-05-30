@@ -816,7 +816,7 @@ def __get_crypto_historical_data(symbol, interval, start_date, end_date):
         raise ValueError(
             "No se han encontrado datos para el símbolo y el rango de fechas proporcionados"
         )
-    return hist[['Open', 'High', 'Low', 'Close']] 
+    return hist[["Open", "High", "Low", "Close"]]
 
 
 def calculate_stop_loss_take_profit(
@@ -969,7 +969,7 @@ def backtest(
         portfolio.at[date, "total"] = total_value
 
     # Calcular el máximo drawdown y el máximo incremento del portfolio
-    max_drawdown = (trough - peak) / peak
+    max_drawdown = (peak - trough) / peak  # Corrected calculation
     max_increase = (peak - initial_capital) / initial_capital
 
     # Calcular la duración promedio de las operaciones
@@ -1089,11 +1089,6 @@ def backtest_endpoint():
         "signals": signals_dict,
         "portfolio": portfolio_dict,
         "summary": {
-            "final_portfolio_value": portfolio["total"].iloc[-1],
-            "total_return": (
-                (portfolio["total"].iloc[-1] / portfolio["total"].iloc[0]) - 1
-            )
-            * 100,
             **summary,  # Añadir el summary calculado
         },
     }
@@ -1126,8 +1121,8 @@ def generate_algorithm():
         "1. Definición de la función:\ndef generate_signals(data):\n\n"
         "2. Creación de la estructura de datos:\nsignals = pd.DataFrame(index=data.index)\n\n"
         "3. Columna obligatoria 'positions':\nsignals['positions'] = ...\n"
-        "- Valores > 0: posición larga (compra).\n"
-        "- Valores < 0: posición corta (venta).\n"
+        "- Valores > 0: posición larga.\n"
+        "- Valores < 0: posición corta.\n"
         "- Valores = 0: sin operación.\n\n"
         "4. Devolución del DataFrame:\nreturn signals\n\n"
         "Están disponibles las siguientes librerías:\n"
