@@ -1,12 +1,20 @@
 import React, { useEffect, useRef, memo } from "react";
 
-function TradingViewWidget1({ symbol, indicador }) {
-  const container = useRef(null);
+interface TradingViewWidgetProps {
+  symbol: string;
+  indicador: string;
+}
+
+const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
+  symbol,
+  indicador,
+}) => {
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const containerElement = container.current;
 
-    let formattedSymbol;
+    let formattedSymbol: string;
     switch (indicador) {
       case "1":
         formattedSymbol = `BINANCE:${symbol}USDT`;
@@ -40,10 +48,14 @@ function TradingViewWidget1({ symbol, indicador }) {
       support_host: "https://www.tradingview.com",
     });
 
-    containerElement.appendChild(script);
+    if (containerElement) {
+      containerElement.appendChild(script);
+    }
 
     return () => {
-      containerElement.innerHTML = ""; // Limpia el script al desmontar el componente
+      if (containerElement) {
+        containerElement.innerHTML = ""; // Limpia el script al desmontar el componente
+      }
     };
   }, [symbol, indicador]);
 
@@ -68,6 +80,6 @@ function TradingViewWidget1({ symbol, indicador }) {
       </div>
     </div>
   );
-}
+};
 
-export default memo(TradingViewWidget1);
+export default memo(TradingViewWidget);
