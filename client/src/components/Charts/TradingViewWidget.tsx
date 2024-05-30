@@ -50,10 +50,14 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
       support_host: "https://www.tradingview.com",
     });
 
-    containerElement?.appendChild(script);
+    if (containerElement) {
+      containerElement.appendChild(script);
+    }
 
     return () => {
-      containerElement?.innerHTML = ""; // Limpia el script al desmontar el componente
+      if (containerElement) {
+        containerElement.innerHTML = ""; // Limpia el script al desmontar el componente
+      }
     };
   }, [symbol, indicador]);
 
@@ -67,6 +71,15 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
         className="tradingview-widget-container__widget"
         style={{ height: "100%", width: "100%" }}
       ></div>
+      <div className="tradingview-widget-copyright">
+        <a
+          href="https://www.tradingview.com/"
+          rel="noopener nofollow"
+          target="_blank"
+        >
+          <span className="blue-text">Track all markets on TradingView</span>
+        </a>
+      </div>
     </div>
   );
 };
