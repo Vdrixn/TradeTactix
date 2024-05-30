@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import DatePickerOne from "@/components/FormElements/DatePicker/DatePickerOne";
+import DatePickerOne from "@/components/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
 import TradingViewWidget from "@/components/Charts/TradingViewWidget";
 import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
