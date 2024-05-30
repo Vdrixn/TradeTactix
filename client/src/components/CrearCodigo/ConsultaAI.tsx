@@ -5,6 +5,7 @@ const ConsultaAI: React.FC = () => {
   const [algorithm, setAlgorithm] = useState<string>("");
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState<boolean>(false); // Estado para controlar si el algoritmo se está generando
   const algorithmRef = useRef<HTMLTextAreaElement>(null);
 
   const handleGenerateAlgorithm = () => {
@@ -13,8 +14,8 @@ const ConsultaAI: React.FC = () => {
       setShowAlert(true);
       return;
     }
-    console.log(description);
     setShowAlert(false);
+    setIsGenerating(true); // Empezar a generar el algoritmo
     fetch("http://127.0.0.1:8080/api/generate-algorithm", {
       method: "POST",
       headers: {
@@ -38,6 +39,9 @@ const ConsultaAI: React.FC = () => {
         setAlertMessage("Error generando el algoritmo");
         setShowAlert(true);
         console.error(err);
+      })
+      .finally(() => {
+        setIsGenerating(false); // Terminar de generar el algoritmo
       });
   };
 
@@ -112,7 +116,17 @@ const ConsultaAI: React.FC = () => {
             </button>
           </div>
         </div>
-        {algorithm && (
+        {isGenerating && (
+          <div
+            className="mb-4 flex flex-col items-center justify-center rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
+            style={{ minHeight: "100%" }}
+          >
+            <h3 className="text-gray-200 p-6.5 text-xl font-medium">
+              Generando algoritmo...
+            </h3>
+          </div>
+        )}
+        {algorithm && !isGenerating && (
           <div
             className="mb-4 flex flex-col justify-between rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark"
             style={{ minHeight: "100%" }}
