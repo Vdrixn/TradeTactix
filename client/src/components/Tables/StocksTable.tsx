@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
 import { Sparklines, SparklinesLine } from "react-sparklines";
 
-const StocksTable = () => {
-  const [stocks, setStocks] = useState([]);
-  const [filteredStocks, setFilteredStocks] = useState([]);
+// Definir la interfaz para los datos de acciones
+interface StockData {
+  symbol: string;
+  name: string;
+  current_price: number;
+  price_change_24h: number;
+  price_change_7d: number;
+  market_cap: number;
+  sparkline: number[];
+}
+
+const StocksTable: React.FC = () => {
+  const [stocks, setStocks] = useState<StockData[]>([]);
+  const [filteredStocks, setFilteredStocks] = useState<StockData[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
@@ -17,7 +28,7 @@ const StocksTable = () => {
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
-        const data = await response.json();
+        const data: StockData[] = await response.json();
         setStocks(data);
         setFilteredStocks(data);
       } catch (error) {
@@ -54,12 +65,14 @@ const StocksTable = () => {
     }
   };
 
-  const handleSetEntriesPerPage = (event) => {
+  const handleSetEntriesPerPage = (
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) => {
     setEntriesPerPage(Number(event.target.value));
     setCurrentPage(1); // Reiniciar la página a la primera cuando cambia el límite
   };
 
-  const renderChange = (change) => {
+  const renderChange = (change: number) => {
     const isPositive = change >= 0;
     return (
       <span style={{ color: isPositive ? "green" : "red" }}>
