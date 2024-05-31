@@ -46,11 +46,13 @@ const BacktestingPage: React.FC = () => {
   const [minDate, setMinDate] = useState<string>(formatDate(fourYearsAgo));
   const [summary, setSummary] = useState<Summary>({});
   const [algorithm, setAlgorithm] = useState<string>("");
+  const [exitConditions, setExitConditions] = useState<string>(""); // Nueva variable para exit_conditions
   const [temporalidad, setTemporalidad] = useState<string>("");
   const [leverage, setLeverage] = useState<number>(1);
   const [riskRewardRatio, setRiskRewardRatio] = useState<number>(1);
   const [initialCapital, setInitialCapital] = useState<number>(1000);
   const [tradeRisk, setTradeRisk] = useState<number>(1);
+  const [useAutoSlTp, setUseAutoSlTp] = useState<boolean>(true); // Nueva variable para el checkbox
   const [backtestResults, setBacktestResults] = useState<any | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -116,7 +118,8 @@ const BacktestingPage: React.FC = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        algorithm: algorithm,
+        generate_signals: algorithm,
+        exit_conditions: exitConditions, // Añadir exit_conditions al cuerpo del request
         symbol: symbol,
         start_date: startDate,
         end_date: endDate,
@@ -125,6 +128,7 @@ const BacktestingPage: React.FC = () => {
         risk_reward_ratio: riskRewardRatio,
         initial_capital: initialCapital,
         trade_risk: tradeRisk,
+        use_auto_sl_tp: useAutoSlTp ? 1 : 0, // Añadir el checkbox al cuerpo del request
       }),
     })
       .then((res) => res.json())
@@ -204,37 +208,94 @@ const BacktestingPage: React.FC = () => {
             </div>
             <div className="flex flex-grow flex-col gap-5.5 p-6.5">
               <textarea
-                rows={6}
-                placeholder={`El Algoritmo debe incluir únicamente la funcion generate_signals(data) que recibe un DataFrame con los precios. Debe retornar un DataFrame.
+                rows={5}
+                placeholder={`**Instrucciones para Definir tu Estrategia de Trading**
 
-Requisitos Obligatorios:
-1. Definición de la función:
-def generate_signals(data):
+Para realizar el backtesting de tu estrategia de trading, debes proporcionar dos funciones: 'generate_signals' y 'exit_conditions'. Aquí tienes los detalles y requisitos necesarios para cada una de ellas.
 
-2. Creación de la estructura de datos:
-signals = pd.DataFrame(index=data.index)
+**Estructura del DataFrame 'data'**
 
-3. Columna obligatoria 'positions':
-signals['positions'] = ...
-- Valores > 0: posición larga (compra).
-- Valores < 0: posición corta (venta).
-- Valores = 0: sin operación.
+El DataFrame 'data' tiene las siguientes columnas:
+- 'Close': Precio de cierre.
+- 'High': Precio máximo.
+- 'Low': Precio mínimo.
+- 'Open': Precio de apertura.
 
-4. Devolución del DataFrame:
-return signals
-
-Están disponibles las siguientes siguientes librerías:
+**Librerías Disponibles**
 - pandas as pd
 - numpy as np
 
-La estructura del DataFrame 'data' es la siguiente:
-- Columna 'Close': precio de cierre.
-- Columna 'High': precio máximo.
-- Columna 'Low': precio mínimo.
-- Columna 'Open': precio de apertura.`}
+**Función Obligatoria: generate_signals**
+
+Debes definir una función llamada 'generate_signals' con la siguiente estructura:
+
+def generate_signals(data):
+    signals = pd.DataFrame(index=data.index)
+    signals['positions'] = ...  # Valores > 0: posición larga, < 0: posición corta, 0: sin operación.
+    signals['stop_loss'] = ...  # Opcional: valor de stop_loss.
+    signals['take_profit'] = ...  # Opcional: valor de take_profit.
+    return signals
+
+**Función Opcional: exit_conditions**
+
+Puedes definir una función llamada 'exit_conditions' para establecer condiciones personalizadas de salida de posiciones:
+
+def exit_conditions(position, current_price, date):
+    # Lógica del usuario para definir condiciones de salida.
+    return ...
+
+**Estructura del Diccionario position**
+
+El diccionario 'position' contiene los siguientes detalles:
+- 'entry_date': Fecha de entrada.
+- 'entry_price': Precio de entrada.
+- 'position_size': Tamaño de la posición (ajustado por apalancamiento).
+- 'sl_price': Precio de stop_loss.
+- 'tp_price': Precio de take_profit.
+- 'direction': Dirección de la posición (1 para larga, -1 para corta).
+- 'trade_amount': Cantidad invertida en la posición.
+- 'leverage': Apalancamiento aplicado.
+
+**Estructuras de Datos que Debes Devolver**
+
+1. **generate_signals**:
+   - Un DataFrame 'signals' con las columnas:
+     - 'positions': Cantidad de la posición (>0 para larga, <0 para corta, 0 para no operar).
+     - 'stop_loss' (opcional): Define el 'stop_loss' para cada posición.
+     - 'take_profit' (opcional): Define el 'take_profit' para cada posición.
+
+2. **exit_conditions** (opcional):
+   - Un booleano que indica si se debe cerrar la posición. La función recibe:
+     - 'position': Diccionario con detalles de la posición abierta.
+     - 'current_price': Precio actual del activo.
+     - 'date': Fecha actual.
+
+**Ejemplo de Implementación**
+
+generate_signals:
+def generate_signals(data):
+    signals = pd.DataFrame(index=data.index)
+    signals['positions'] = np.where(data['Close'] > data['Open'], 1, -1)
+    signals['stop_loss'] = data['Close'] * 0.95
+    signals['take_profit'] = data['Close'] * 1.05
+    return signals
+
+exit_conditions (opcional):
+def exit_conditions(position, current_price, date):
+    return (date - position['entry_date']).days >= 5
+`}
                 className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                 value={algorithm}
                 onChange={(e) => setAlgorithm(e.target.value)}
+                style={{ flexGrow: 3 }} // Ajustar la altura para ocupar 3/4
+              ></textarea>
+              <textarea
+                rows={7}
+                placeholder={`**Escribe la función exit_conditions aquí (opcional)**`}
+                className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                value={exitConditions}
+                onChange={(e) => setExitConditions(e.target.value)}
+                style={{ flexGrow: 1 }} // Ajustar la altura para ocupar 1/4
               ></textarea>
             </div>
           </div>
@@ -315,6 +376,17 @@ La estructura del DataFrame 'data' es la siguiente:
                     onChange={(e) => setTradeRisk(Number(e.target.value))}
                     className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
+                </div>
+                <div className="text-gray-400 block">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={useAutoSlTp}
+                      onChange={(e) => setUseAutoSlTp(e.target.checked)}
+                      className="mr-2"
+                    />
+                    Calculo de SL y TP automático
+                  </label>
                 </div>
                 <button
                   onClick={handleBacktest}

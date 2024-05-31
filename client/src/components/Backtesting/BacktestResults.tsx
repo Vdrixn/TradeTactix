@@ -5,7 +5,8 @@ import ChartOne from "@/components/Charts/ChartOne";
 interface BacktestResultsProps {
   results: {
     summary: {
-      final_capital: number;
+      final_strategy_value: number;
+      final_hold_value: number;
       unrealized_pnl: number;
       num_positions: number;
       num_trades: number;
@@ -14,6 +15,7 @@ interface BacktestResultsProps {
       max_drawdown: number;
       max_increase: number;
       average_duration: number;
+      final_cash_value: number;
     };
     signals: any;
     portfolio: any;
@@ -33,9 +35,11 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
     value: results.portfolio.hold[key],
   }));
 
-  const filteredSignalKeys = Object.keys(results.signals.price).filter(
-    (key) => results.signals.signal?.[key] !== 0,
-  );
+  const filteredSignalKeys = results.signals?.price
+    ? Object.keys(results.signals.price).filter(
+        (key) => results.signals.positions[key] !== 0,
+      )
+    : [];
 
   const filteredSignals = filteredSignalKeys.filter(
     (key) =>
@@ -65,20 +69,20 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
           </CardDataStats>
           <CardDataStats
             title="Capital Final Estrategia"
-            total={`$${(summary.final_capital + summary.unrealized_pnl).toFixed(2)}`}
+            total={`$${summary.final_strategy_value.toFixed(2)}`}
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">📈</span>
           </CardDataStats>
           <CardDataStats
-            title="Capital Final"
-            total={`$${summary.final_capital.toFixed(2)}`}
+            title="Capital Final en Efectivo"
+            total={`$${summary.final_cash_value.toFixed(2)}`}
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">💰</span>
           </CardDataStats>
           <CardDataStats
-            title="Capital Invertido"
+            title="Ganancias y Pérdidas No Realizadas"
             total={`$${summary.unrealized_pnl.toFixed(2)}`}
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
@@ -121,7 +125,7 @@ const BacktestResults: React.FC<BacktestResultsProps> = ({ results }) => {
           </CardDataStats>
           <CardDataStats
             title="Diferencia Estrategia frente a Mercado"
-            total={`${(((summary.final_capital + summary.unrealized_pnl - lastHoldValue) / lastHoldValue) * 100).toFixed(2)}%`}
+            total={`${(((summary.final_strategy_value - lastHoldValue) / lastHoldValue) * 100).toFixed(2)}%`}
             className="flex-1 rounded-sm border border-stroke p-4 shadow-default dark:border-strokedark dark:bg-boxdark"
           >
             <span className="text-black dark:text-white">📊</span>

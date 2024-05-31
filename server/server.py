@@ -22,7 +22,7 @@ stocks_cache = {}
 forex_cache = {}
 
 # Variables globales
-crypto_symbols_map = {} # Mapa para nombres y símbolos de criptomonedas
+crypto_symbols_map = {}  # Mapa para nombres y símbolos de criptomonedas
 crypto_ids = {}  # Mapa de IDs y simbolos de criptomonedas
 stocks_symbols_map = {}  # Mapa para nombres y símbolos de acciones
 forex_symbols_map = {}  # Mapa para nombres y símbolos de pares de divisas
@@ -427,6 +427,7 @@ def stocks_listings():
 
 # ------------------------Divisas-------------------------
 
+
 def __get_forex_data_from_api():
     subset_symbols = all_forex_symbols
     try:
@@ -820,7 +821,6 @@ def __get_crypto_historical_data(symbol, interval, start_date, end_date):
 
 
 def calculate_stop_loss_take_profit(trade_amount, risk_reward_ratio, leverage):
-
     print("risk_in_dollars", trade_amount)
     # Calculate the desired profit in dollars
     desired_profit_in_dollars = trade_amount * risk_reward_ratio
@@ -846,139 +846,189 @@ def backtest(
     initial_capital,
     risk_reward_ratio,
     trade_amount,
-    stop_loss,
-    take_profit,
+    sl_percentage,
+    tp_percentage,
     leverage,
+    use_auto_sl_tp,
+    exit_conditions,
 ):
+    # Inicialización de variables
     positions = pd.DataFrame(index=signals.index).fillna(0.0)
     portfolio = pd.DataFrame(index=signals.index).fillna(0.0)
-    portfolio["cash"] = initial_capital
+    portfolio["cash"] = float(initial_capital)
+    portfolio["total"] = float(initial_capital)
     portfolio["hold"] = data["Close"] * (initial_capital / data["Close"].iloc[0])
-    portfolio["total"] = initial_capital  # Inicializar la columna 'total'
 
     open_positions = []
-    current_cash = initial_capital
+    current_cash = float(initial_capital)
 
     winning_trades = 0
     losing_trades = 0
     trade_durations = []
-    peak = initial_capital
-    trough = initial_capital
+    peak = float(initial_capital)
+    trough = float(initial_capital)
 
     for date, signal in signals.iterrows():
-        print("date", date)
-
         entry_price = data.loc[date, "Close"]
         signals.loc[date, "price"] = entry_price
 
         # Verificar y cerrar posiciones abiertas
         for position in open_positions[:]:
-            entry_price = position["entry_price"]
-            position_size = position["position_size"]
-            sl_price = position["sl_price"]
-            tp_price = position["tp_price"]
-            direction = position["direction"]
             current_price = data.loc[date, "Close"]
 
-            if (direction == 1 and current_price <= sl_price) or (
-                direction == -1 and current_price >= sl_price
-            ):
-                losing_trades += 1
-                trade_duration = (date - position["entry_date"]).days
-                trade_durations.append(trade_duration)
+            if exit_conditions and exit_conditions(position, current_price, date):
+                # Cerrar posición por condiciones de salida
+                gain_loss = (current_price - position["entry_price"]) / position[
+                    "entry_price"
+                ]
+                gain_loss *= position["leverage"]
+                if gain_loss < -1:
+                    gain_loss = -1
+                trade_value = position["trade_amount"] * (1 + gain_loss)
+                current_cash += trade_value
                 open_positions.remove(position)
-            elif (direction == 1 and current_price >= tp_price) or (
-                direction == -1 and current_price <= tp_price
-            ):
-                winning_trades += 1
-                trade_duration = (date - position["entry_date"]).days
-                trade_durations.append(trade_duration)
-                current_cash += trade_amount * risk_reward_ratio
-                open_positions.remove(position)
+                if gain_loss > 0:
+                    winning_trades += 1
+                else:
+                    losing_trades += 1
+                trade_durations.append((date - position["entry_date"]).days)
+            elif position["direction"] == 1:
+                gain_loss = (current_price - position["entry_price"]) / position[
+                    "entry_price"
+                ]
+                gain_loss *= position["leverage"]
+                if gain_loss < -1:
+                    losing_trades += 1
+                    open_positions.remove(position)
+                elif (
+                    current_price <= position["sl_price"]
+                    or current_price >= position["tp_price"]
+                ):
+                    trade_value = position["trade_amount"] * (1 + gain_loss)
+                    current_cash += trade_value
+                    open_positions.remove(position)
+                    if gain_loss > 0:
+                        winning_trades += 1
+                    else:
+                        losing_trades += 1
+                    trade_durations.append((date - position["entry_date"]).days)
+            elif position["direction"] == -1:
+                gain_loss = (position["entry_price"] - current_price) / position[
+                    "entry_price"
+                ]
+                gain_loss *= position["leverage"]
+                if gain_loss < -1:
+                    losing_trades += 1
+                    open_positions.remove(position)
+                elif (
+                    current_price >= position["sl_price"]
+                    or current_price <= position["tp_price"]
+                ):
+                    trade_value = position["trade_amount"] * (1 + gain_loss)
+                    current_cash += trade_value
+                    open_positions.remove(position)
+                    if gain_loss > 0:
+                        winning_trades += 1
+                    else:
+                        losing_trades += 1
+                    trade_durations.append((date - position["entry_date"]).days)
 
-        entry_price = data.loc[date, "Close"]
         # Verificar si hay efectivo suficiente para abrir nuevas posiciones
-        if current_cash > 0:
+        if current_cash >= trade_amount:
             # Abrir nuevas posiciones
             if signal["positions"] > 0:  # Señal de compra
-                position_size = (trade_amount * leverage) / entry_price
-                sl_price = entry_price - (entry_price * stop_loss)
-                tp_price = entry_price + (entry_price * take_profit)
-                signals.loc[date, "sl_price"] = sl_price
-                signals.loc[date, "tp_price"] = tp_price
-
+                sl_price = (
+                    entry_price - (entry_price * sl_percentage)
+                    if use_auto_sl_tp
+                    else signal.get("stop_loss", None)
+                )
+                tp_price = (
+                    entry_price + (entry_price * tp_percentage)
+                    if use_auto_sl_tp
+                    else signal.get("take_profit", None)
+                )
                 open_positions.append(
                     {
                         "entry_date": date,
                         "entry_price": entry_price,
-                        "position_size": position_size,
                         "sl_price": sl_price,
                         "tp_price": tp_price,
                         "direction": 1,
+                        "trade_amount": trade_amount,
+                        "leverage": leverage,
                     }
                 )
                 current_cash -= trade_amount
 
             elif signal["positions"] < 0:  # Señal de venta
-                position_size = (trade_amount * leverage) / entry_price
-                sl_price = entry_price + (entry_price * stop_loss)
-                tp_price = entry_price - (entry_price * take_profit)
+                sl_price = (
+                    entry_price + (entry_price * sl_percentage)
+                    if use_auto_sl_tp
+                    else signal.get("stop_loss", None)
+                )
+                tp_price = (
+                    entry_price - (entry_price * tp_percentage)
+                    if use_auto_sl_tp
+                    else signal.get("take_profit", None)
+                )
                 signals.loc[date, "sl_price"] = sl_price
                 signals.loc[date, "tp_price"] = tp_price
-
                 open_positions.append(
                     {
                         "entry_date": date,
                         "entry_price": entry_price,
-                        "position_size": position_size,
                         "sl_price": sl_price,
                         "tp_price": tp_price,
                         "direction": -1,
+                        "trade_amount": trade_amount,
+                        "leverage": leverage,
                     }
                 )
                 current_cash -= trade_amount
 
         totalUnrealizedPnl = 0
-        # Actualizar el valor de las posiciones y el efectivo
+        # Actualizar el valor de las posiciones abiertas
         for position in open_positions:
             current_price = data.loc[date, "Close"]
             if position["direction"] == 1:
-                unrealizedPnl = (current_price - position["entry_price"]) * position[
-                    "position_size"
-                ]
+                change_percentage = (
+                    current_price - position["entry_price"]
+                ) / position["entry_price"]
             elif position["direction"] == -1:
-                unrealizedPnl = (position["entry_price"] - current_price) * position[
-                    "position_size"
-                ]
+                change_percentage = (
+                    position["entry_price"] - current_price
+                ) / position["entry_price"]
+            change_percentage *= position["leverage"]
+            unrealizedPnl = position["trade_amount"] * (1 + change_percentage)
             totalUnrealizedPnl += unrealizedPnl
 
-        # Actualizar el valor del efectivo
         positions.loc[date, "asset"] = totalUnrealizedPnl
         portfolio.loc[date, "cash"] = current_cash
 
-        # Calcular el máximo drawdown y el máximo incremento del portfolio
+        # Calcular el valor total del portafolio
         total_value = current_cash + totalUnrealizedPnl
         if total_value > peak:
             peak = total_value
         if total_value < trough:
             trough = total_value
 
-        portfolio.at[date, "total"] = total_value
+        portfolio.loc[date, "total"] = total_value
 
-    # Calcular el máximo drawdown y el máximo incremento del portfolio
-    max_drawdown = (peak - trough) / peak  # Corrected calculation
+    max_drawdown = (peak - trough) / peak
     max_increase = (peak - initial_capital) / initial_capital
 
-    # Calcular la duración promedio de las operaciones
     if trade_durations:
         average_duration = sum(trade_durations) / len(trade_durations)
     else:
         average_duration = 0
 
-    # Actualizar el valor total del portafolio
     portfolio["positions"] = positions["asset"]
     portfolio["total"] = portfolio["positions"] + portfolio["cash"]
     portfolio["returns"] = portfolio["total"].pct_change()
+
+    final_hold_value = portfolio["hold"].iloc[-1]
+    final_strategy_value = portfolio["total"].iloc[-1]
+    unrealized_pnl = totalUnrealizedPnl
 
     summary = {
         "winning_trades": winning_trades,
@@ -988,9 +1038,10 @@ def backtest(
         "average_duration": average_duration,
         "num_trades": winning_trades + losing_trades,
         "num_positions": len(open_positions),
-        "initial_capital": initial_capital,
-        "unrealized_pnl": totalUnrealizedPnl,
-        "final_capital": total_value,
+        "final_hold_value": final_hold_value,
+        "unrealized_pnl": unrealized_pnl,
+        "final_cash_value": current_cash,
+        "final_strategy_value": final_strategy_value,
     }
 
     return portfolio, summary
@@ -1018,7 +1069,7 @@ def backtest_endpoint():
 
     # Calcular SL y TP automáticos si se requiere
     if use_auto_sl_tp:
-        sl_percentage, tp_percentage, _ = calculate_stop_loss_take_profit(
+        sl_percentage, tp_percentage = calculate_stop_loss_take_profit(
             trade_amount, risk_reward_ratio, leverage
         )
     else:
@@ -1155,6 +1206,7 @@ def generate_algorithm():
         "- Valores < 0: posición corta.\n"
         "- Valores = 0: sin operación.\n\n"
         "4. Devolución del DataFrame:\nreturn signals\n\n"
+        "5. Opcional: Columnas 'stop_loss' y 'take_profit' para definir los niveles de stop loss y take profit por operación.\n"
         "Están disponibles las siguientes librerías:\n"
         "- pandas as pd\n"
         "- numpy as np\n\n"
@@ -1197,7 +1249,7 @@ def generate_algorithm():
     else:
         # Devolvemos un mensaje de error si la solicitud falló.
         return jsonify(
-            {"error": "Failed to generate algorithm", "details": response.text}
+            {"error": "Error al generar el algoritmo", "details": response.text}
         ), 500
 
 
