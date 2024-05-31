@@ -819,28 +819,25 @@ def __get_crypto_historical_data(symbol, interval, start_date, end_date):
     return hist[["Open", "High", "Low", "Close"]]
 
 
-def calculate_stop_loss_take_profit(
-    total_portfolio, percentage_of_portfolio_to_risk, risk_benefit_ratio, leverage
-):
-    # Calculate the risk in dollars
-    risk_in_dollars = total_portfolio * (percentage_of_portfolio_to_risk / 100)
-    print("risk_in_dollars", risk_in_dollars)
+def calculate_stop_loss_take_profit(trade_amount, risk_reward_ratio, leverage):
+
+    print("risk_in_dollars", trade_amount)
     # Calculate the desired profit in dollars
-    desired_profit_in_dollars = risk_in_dollars * risk_benefit_ratio
+    desired_profit_in_dollars = trade_amount * risk_reward_ratio
 
     # Calculate the total position (exposure)
-    total_position = risk_in_dollars * leverage
+    total_position = trade_amount * leverage
 
     # Calculate the percentage change for stop loss
-    percentage_change_stop_loss = risk_in_dollars / total_position
+    sl_percentage = trade_amount / total_position
 
     # Calculate the percentage change for take profit
-    percentage_change_take_profit = desired_profit_in_dollars / total_position
+    tp_percentage = desired_profit_in_dollars / total_position
 
-    print("percentage_change_stop_loss", percentage_change_stop_loss)
-    print("percentage_change_take_profit", percentage_change_take_profit)
+    print("percentage_change_stop_loss", sl_percentage)
+    print("percentage_change_take_profit", tp_percentage)
 
-    return percentage_change_stop_loss, percentage_change_take_profit, risk_in_dollars
+    return sl_percentage, tp_percentage
 
 
 def backtest(
@@ -1008,15 +1005,24 @@ def backtest_endpoint():
     start_date = data["start_date"]
     end_date = data["end_date"]
     temporalidad = data["temporalidad"]
-    algorithm_code = data["algorithm"]
+    generate_signals_code = data["generate_signals"]
+    exit_conditions_code = data.get("exit_conditions", None)
     initial_capital = data.get("initial_capital", 10000.0)
     trade_risk = data.get("trade_risk", 1)
     leverage = data.get("leverage", 50)
     risk_reward_ratio = data.get("risk_reward_ratio", 2)
+    use_auto_sl_tp = data.get("use_auto_sl_tp", 1)
 
-    stop_loss, take_profit, trade_amount = calculate_stop_loss_take_profit(
-        initial_capital, trade_risk, risk_reward_ratio, leverage
-    )
+    # Calcular la cantidad de trade
+    trade_amount = initial_capital * (trade_risk / 100)
+
+    # Calcular SL y TP automáticos si se requiere
+    if use_auto_sl_tp:
+        sl_percentage, tp_percentage, _ = calculate_stop_loss_take_profit(
+            trade_amount, risk_reward_ratio, leverage
+        )
+    else:
+        sl_percentage = tp_percentage = None
 
     # Obtener datos históricos del símbolo
     try:
@@ -1024,31 +1030,56 @@ def backtest_endpoint():
             symbol, start_date, end_date, temporalidad
         )
     except Exception as e:
-        return jsonify({"error": f"Error fetching historical data: {str(e)}"}), 500
+        return jsonify({"error": f"Error obteniendo datos históricos: {str(e)}"}), 500
 
-    # Crear un diccionario para el espacio de nombres local
+    # Crear un diccionario para el espacio de nombres local y ejecutar las funciones proporcionadas
     local_namespace = {}
-    # Ejecutar el algoritmo proporcionado
     try:
-        exec(algorithm_code, globals(), local_namespace)
+        exec(generate_signals_code, globals(), local_namespace)
+        generate_signals = local_namespace.get("generate_signals")
+
+        if exit_conditions_code:
+            exec(exit_conditions_code, globals(), local_namespace)
+            exit_conditions = local_namespace.get("exit_conditions")
+        else:
+            exit_conditions = None
+
+        if not generate_signals or not callable(generate_signals):
+            return jsonify(
+                {"error": "Función 'generate_signals' no encontrada o no es callable"}
+            ), 400
+        if exit_conditions_code and (
+            not exit_conditions or not callable(exit_conditions)
+        ):
+            return jsonify(
+                {"error": "Función 'exit_conditions' no encontrada o no es callable"}
+            ), 400
+
     except Exception as e:
-        return jsonify({"error": f"Error executing algorithm code: {str(e)}"}), 500
-
-    # Obtenemos la función generate_signals del espacio de nombres local
-    generate_signals = local_namespace.get("generate_signals")
-
-    # Comprobar si la función generate_signals existe y es callable
-    if not generate_signals or not callable(generate_signals):
         return jsonify(
-            {"error": "Function 'generate_signals' not found in algorithm code"}
-        ), 400
+            {"error": f"Error ejecutando el código del usuario: {str(e)}"}
+        ), 500
 
     # Generar señales
     try:
         signals = generate_signals(historical_data)
+        if not use_auto_sl_tp:
+            if "stop_loss" not in signals.columns:
+                return jsonify(
+                    {"error": "Columna 'stop_loss' no encontrada en señales"}
+                ), 400
+            if "take_profit" not in signals.columns:
+                return jsonify(
+                    {"error": "Columna 'take_profit' no encontrada en señales"}
+                ), 400
+        if "positions" not in signals.columns:
+            return jsonify(
+                {"error": "Columna 'positions' no encontrada en señales"}
+            ), 400
     except Exception as e:
-        return jsonify({"error": f"Error executing generate_signals: {str(e)}"}), 500
+        return jsonify({"error": f"Error ejecutando 'generate_signals': {str(e)}"}), 500
 
+    # Ejecutar backtest
     try:
         portfolio, summary = backtest(
             historical_data,
@@ -1056,12 +1087,14 @@ def backtest_endpoint():
             initial_capital,
             risk_reward_ratio,
             trade_amount,
-            stop_loss,
-            take_profit,
+            sl_percentage,
+            tp_percentage,
             leverage,
+            use_auto_sl_tp,
+            exit_conditions,
         )
     except Exception as e:
-        return jsonify({"error": f"Error executing backtest: {str(e)}"}), 500
+        return jsonify({"error": f"Error ejecutando backtest: {str(e)}"}), 500
 
     # Convertir los índices a strings en el formato adecuado
     def format_date_index(index):
@@ -1093,9 +1126,6 @@ def backtest_endpoint():
         },
     }
 
-    print("stop_loss", stop_loss)
-    print("take_profit", take_profit)
-    print("trade_amount", trade_amount)
     # Devolvemos los resultados del backtest
     return jsonify(results)
 
