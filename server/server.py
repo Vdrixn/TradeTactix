@@ -755,6 +755,7 @@ def get_crypto_chart_data_yf(symbol, interval):
 
 # ---------------------------------------------------------------------------
 
+# Funciones para obtener datos históricos de activos financieros necesarias para el backtesting
 
 def __get_historical_data(symbol, start_date, end_date, interval):
     yf_intervals = {
@@ -839,6 +840,9 @@ def calculate_stop_loss_take_profit(trade_amount, risk_reward_ratio, leverage):
 
     return sl_percentage, tp_percentage
 
+# ---------------------------------------------------------------------------
+
+# Endpoint para backtesting de estrategias de trading
 
 def backtest(
     data,
@@ -947,6 +951,8 @@ def backtest(
                     if use_auto_sl_tp
                     else signal.get("take_profit", None)
                 )
+                signals.loc[date, "sl_price"] = sl_price
+                signals.loc[date, "tp_price"] = tp_price
                 open_positions.append(
                     {
                         "entry_date": date,
@@ -1183,43 +1189,10 @@ def backtest_endpoint():
 
 # ---------------------------------------------------------------------------
 
-# Endpoint para obtener la respuesta de OpenAI
+# Función para obtener la respuesta de OpenAI
 
-
-@app.route("/api/generate-algorithm", methods=["POST"])
-def generate_algorithm():
-    # Extraemos las instrucciones del cuerpo de la solicitud
-    data = request.get_json()
-    instructions = data.get("instructions", "")
-
-    # Preparamos la consulta para la API de OpenAI incluyendo las instrucciones del usuario.
-    prompt = (
-        "Crear un algoritmo de trading que cumpla con las siguientes instrucciones:\n\n"
-        f"{instructions}\n\n"
-        "El Algoritmo debe incluir únicamente la función generate_signals(data) que recibe un DataFrame con los precios. "
-        "Debe retornar un DataFrame.\n\n"
-        "Requisitos Obligatorios:\n"
-        "1. Definición de la función:\ndef generate_signals(data):\n\n"
-        "2. Creación de la estructura de datos:\nsignals = pd.DataFrame(index=data.index)\n\n"
-        "3. Columna obligatoria 'positions':\nsignals['positions'] = ...\n"
-        "- Valores > 0: posición larga.\n"
-        "- Valores < 0: posición corta.\n"
-        "- Valores = 0: sin operación.\n\n"
-        "4. Devolución del DataFrame:\nreturn signals\n\n"
-        "5. Opcional: Columnas 'stop_loss' y 'take_profit' para definir los niveles de stop loss y take profit por operación.\n"
-        "Están disponibles las siguientes librerías:\n"
-        "- pandas as pd\n"
-        "- numpy as np\n\n"
-        "La estructura del DataFrame 'data' es la siguiente:\n"
-        "- Columna 'Close': precio de cierre.\n"
-        "- Columna 'High': precio máximo.\n"
-        "- Columna 'Low': precio mínimo.\n"
-        "- Columna 'Open': precio de apertura.\n\n"
-        "Por favor, proporciona solo el código de la función, no incluyas los import. Incluye comentarios explicativos en el código."
-    )
-
-    # Realizamos la consulta a la API de OpenAI
-    response = requests.post(
+def chat_with_gpt3(prompt):
+    return requests.post(
         "https://api.openai.com/v1/chat/completions",
         headers={
             "Authorization": "Bearer sk-proj-fvWacwpnqYYfG1HAM5t4T3BlbkFJIz7oBhwcUYcmDbHBvqxE",
@@ -1228,21 +1201,109 @@ def generate_algorithm():
         json={
             "model": "gpt-3.5-turbo",
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": 1500,
+            "max_tokens": 2500,
             "n": 1,
             "stop": ["\n\n"],
         },
     )
 
+
+
+# Endpoint para obtener la respuesta de OpenAI
+
+@app.route("/api/generate-algorithm", methods=["POST"])
+def generate_algorithm():
+    data = request.get_json()
+    generate_signals = data.get("generate_signals", "")
+    exit_conditions = data.get("exit_conditions", "")
+
+    print("generate_signals:", generate_signals)
+    print("exit_conditions:", exit_conditions)
+    print("-------------------------------------")
+    # Preparamos la consulta para la API de OpenAI incluyendo las instrucciones del usuario.
+    prompt = (
+        "Quiero que escribas la funcion generate_signals(data) cuyo funcionamiento se describe a continuación:\n\n"
+        f"Descripción de generate_signals: {generate_signals}\n\n"
+        "Respetando las siguientes instrucciones:\n\n"
+        "generate_signals(data) debe seguir esta estructura:\n"
+        "def generate_signals(data):\n"
+        "    signals = pd.DataFrame(index=data.index)\n"
+        "    signals['positions'] = ...  # Valores > 0: posición larga, < 0: posición corta, 0: sin operación.\n"
+        "    signals['stop_loss'] = ...  # Opcional: valor de stop_loss.\n"
+        "    signals['take_profit'] = ...  # Opcional: valor de take_profit.\n"
+        "    return signals\n\n"
+        "Estructura del DataFrame 'data'\n\n"
+        "El DataFrame 'data' tiene las siguientes columnas:\n"
+        "- 'Close': Precio de cierre.\n"
+        "- 'High': Precio máximo.\n"
+        "- 'Low': Precio mínimo.\n"
+        "- 'Open': Precio de apertura.\n\n"
+        "Librerías Disponibles\n"
+        "- pandas as pd\n"
+        "- numpy as np\n"
+        "Por favor ES MUY IMPORTANTE que solo proporciones el código de las funciones (Que sea ejecutable), no incluyas comentarios adicionales ni etiquetas de código. Necesito que la respuesta sea consistente y sin ruido adicional.\n\n"
+    )
+
+    # Realizamos la consulta a la API de OpenAI
+    response = chat_with_gpt3(prompt)
+
     if response.status_code == 200:
         # Recuperamos la respuesta completa de la API.
         chatgpt_response = response.json()["choices"][0]["message"]["content"].strip()
+        print("chatgpt_response:", response.json()["choices"][0]["message"]["content"])
 
         # Eliminamos las etiquetas de código ("```python" y "```") si están presentes.
         if chatgpt_response.startswith("```python"):
             chatgpt_response = chatgpt_response[9:].strip()
         if chatgpt_response.endswith("```"):
             chatgpt_response = chatgpt_response[:-3].strip()
+
+        # Si se proporcionaron instrucciones para la función exit_conditions, solicitamos la respuesta al usuario.
+        if exit_conditions != "":
+            prompt = (
+                "Quiero que escribas la función exit_conditions(position, current_price, date) en base a la siguiente descripción:\n\n"
+                f"{exit_conditions}\n"
+                "Aegurandote de que cumple las siguientes instrucciones:\n\n"
+                "exit_conditions(position, current_price, date) debe seguir esta estructura:\n\n"
+                "def exit_conditions(position, current_price, date):\n"
+                "    # Lógica del usuario para definir condiciones de salida.\n"
+                "    return (boolean)\n\n"
+                "Estructura del Diccionario position:\n"
+                "- 'entry_date': Fecha de entrada.\n"
+                "- 'entry_price': Precio de entrada.\n"
+                "- 'position_size': Tamaño de la posición (ajustado por apalancamiento).\n"
+                "- 'sl_price': Precio de stop_loss.\n"
+                "- 'tp_price': Precio de take_profit.\n"
+                "- 'direction': Dirección de la posición (1 para larga, -1 para corta).\n"
+                "- 'trade_amount': Cantidad invertida en la posición.\n"
+                "- 'leverage': Apalancamiento aplicado.\n\n"
+                "Librerías Disponibles\n"
+                "- pandas as pd\n"
+                "- numpy as np\n"
+                "Por favor ES MUY IMPORTANTE que solo proporciones el código de las funciones, no incluyas comentarios adicionales ni etiquetas de código. Necesito que la respuesta sea consistente y sin ruido adicional.\n\n"
+            )
+
+            # Realizamos la consulta a la API de OpenAI
+            response = chat_with_gpt3(prompt)
+
+            if response.status_code == 200:
+                # Recuperamos la respuesta completa de la API.
+                chatgpt_response2 = response.json()["choices"][0]["message"]["content"].strip()
+                print("chatgpt_response:", response.json()["choices"][0]["message"]["content"])
+
+                # Eliminamos las etiquetas de código ("```python" y "```") si están presentes.
+                if chatgpt_response2.startswith("```python"):
+                    chatgpt_response2 = chatgpt_response2[9:].strip()
+                if chatgpt_response2.endswith("```"):
+                    chatgpt_response2 = chatgpt_response2[:-3].strip()
+            else:
+                # Devolvemos un mensaje de error si la solicitud falló.
+                return jsonify(
+                    {"error": "Error al generar el algoritmo", "details": response.text}
+                ), 500
+
+            # Concatenamos las respuestas generadas por OpenAI.
+            chatgpt_response = chatgpt_response + "\n\n" + chatgpt_response2
 
         # Devolvemos la respuesta generada por OpenAI.
         return jsonify({"codigo": chatgpt_response})

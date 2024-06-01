@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 
 const ConsultaAI: React.FC = () => {
-  const [description, setDescription] = useState<string>("");
+  const [descriptionGenerateSignals, setDescriptionGenerateSignals] =
+    useState<string>("");
+  const [descriptionExitConditions, setDescriptionExitConditions] =
+    useState<string>("");
   const [algorithm, setAlgorithm] = useState<string>("");
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -9,8 +12,10 @@ const ConsultaAI: React.FC = () => {
   const algorithmRef = useRef<HTMLTextAreaElement>(null);
 
   const handleGenerateAlgorithm = () => {
-    if (!description) {
-      setAlertMessage("Escribe una descripción antes de generar el algoritmo.");
+    if (!descriptionGenerateSignals) {
+      setAlertMessage(
+        "Escribe una descripción para 'generate_signals' antes de generar el algoritmo.",
+      );
       setShowAlert(true);
       return;
     }
@@ -22,7 +27,8 @@ const ConsultaAI: React.FC = () => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        instructions: description,
+        generate_signals: descriptionGenerateSignals,
+        exit_conditions: descriptionExitConditions,
       }),
     })
       .then((res) => res.json())
@@ -93,18 +99,34 @@ const ConsultaAI: React.FC = () => {
         >
           <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
             <h3 className="text-gray-200 text-xl font-medium">
-              Descripción del Algoritmo
+              Descripción del la Función generate_signals
             </h3>
           </div>
           <div className="flex flex-grow flex-col p-6.5">
             <textarea
               rows={6}
               placeholder={
-                "Escribe una descripción de lo que quieres que haga tu algoritmo. Por ejemplo, puedes detallar una estrategia de trading específica que te gustaría implementar, como un cruce de medias móviles, un indicador técnico o cualquier otra lógica de trading. Asegúrate de incluir todos los parámetros y condiciones necesarios para que el algoritmo funcione correctamente."
+                "Escribe una descripción de lo que quieres que haga tu algoritmo generate_signals. Por ejemplo, puedes detallar una estrategia de trading específica que te gustaría implementar, como un cruce de medias móviles, un indicador técnico o cualquier otra lógica de trading. Asegúrate de incluir todos los parámetros y condiciones necesarios para que el algoritmo funcione correctamente."
               }
               className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              value={descriptionGenerateSignals}
+              onChange={(e) => setDescriptionGenerateSignals(e.target.value)}
+            ></textarea>
+          </div>
+          <div className="border-b border-stroke px-6.5 py-4 dark:border-strokedark">
+            <h3 className="text-gray-200 text-xl font-medium">
+              Descripción de la Función exit_conditions
+            </h3>
+          </div>
+          <div className="flex flex-grow flex-col p-6.5">
+            <textarea
+              rows={6}
+              placeholder={
+                "Escribe una descripción de lo que quieres que haga tu función exit_conditions (opcional). Por ejemplo, puedes detallar condiciones específicas en las que se deberían cerrar las posiciones, como alcanzar un cierto número de días, cambios en el precio, u otros factores."
+              }
+              className="w-full flex-grow rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+              value={descriptionExitConditions}
+              onChange={(e) => setDescriptionExitConditions(e.target.value)}
             ></textarea>
           </div>
           <div className="flex justify-center p-6.5">
