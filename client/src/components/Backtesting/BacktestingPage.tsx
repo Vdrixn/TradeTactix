@@ -53,7 +53,7 @@ const BacktestingPage: React.FC = () => {
   const [riskRewardRatio, setRiskRewardRatio] = useState<number>(1);
   const [initialCapital, setInitialCapital] = useState<number>(1000);
   const [tradeRisk, setTradeRisk] = useState<number>(1);
-  const [useAutoSlTp, setUseAutoSlTp] = useState<boolean>(true); // Nueva variable para el checkbox
+  const [useAutoSlTp, setUseAutoSlTp] = useState<boolean>(false); // Nueva variable para el checkbox
   const [backtestResults, setBacktestResults] = useState<any | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
@@ -381,6 +381,7 @@ def exit_conditions(position, current_price, date):
                 <div className="mb-4">
                   <CheckboxTwo
                     label="Calculo de SL y TP automático"
+                    value={useAutoSlTp} // Agregar el valor del checkbox
                     onChange={(e) => setUseAutoSlTp(e.target.checked)}
                   />
                 </div>
