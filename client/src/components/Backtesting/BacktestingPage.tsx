@@ -113,6 +113,7 @@ const BacktestingPage: React.FC = () => {
       return;
     }
     setShowAlert(false);
+    console.log(useAutoSlTp);
     fetch("http://127.0.0.1:8080/api/backtest", {
       method: "POST",
       headers: {
@@ -381,7 +382,7 @@ def exit_conditions(position, current_price, date):
                 <div className="mb-4">
                   <CheckboxTwo
                     label="Calculo de SL y TP automático"
-                    onChange={(e) => setUseAutoSlTp(e.target.checked)}
+                    onChange={setUseAutoSlTp}
                   />
                 </div>
                 <button
