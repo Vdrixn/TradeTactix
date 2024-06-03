@@ -71,7 +71,7 @@ const ForexTable: React.FC = () => {
   };
 
   const renderChange = (change: number) => {
-    if (change === undefined) return "-";
+    if (typeof change !== "number" || isNaN(change)) return "-";
     const isPositive = change >= 0;
     return (
       <span style={{ color: isPositive ? "green" : "red" }}>

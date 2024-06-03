@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import DatePickerOne from "@/components/DatePicker/DatePickerOne";
 import SelectGroupOne from "@/components/SelectGroup/SelectGroupOne";
 import dynamic from "next/dynamic";
-import BacktestResults from "@/components/Backtesting/BacktestResults"; // Importa el componente de resultados
+import BacktestResults from "@/components/Backtesting/BacktestResults";
+import CheckboxTwo from "@/components/Checkboxes/CheckboxTwo"; // Importa el componente de resultados
 
 const TradingViewWidget = dynamic(
   () => import("@/components/Charts/TradingViewWidget"),
@@ -377,16 +378,12 @@ def exit_conditions(position, current_price, date):
                     className="w-full rounded-lg border-[1.5px] border-stroke bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
                   />
                 </div>
-                <div className="text-gray-400 block">
-                  <label>
-                    <input
-                      type="checkbox"
-                      checked={useAutoSlTp}
-                      onChange={(e) => setUseAutoSlTp(e.target.checked)}
-                      className="mr-2"
-                    />
-                    Calculo de SL y TP automático
-                  </label>
+                <div className="mb-4">
+                  <CheckboxTwo
+                    label="Calculo de SL y TP automático"
+                    checked={false}
+                    onChange={(e) => setUseAutoSlTp(e.target.checked)}
+                  />
                 </div>
                 <button
                   onClick={handleBacktest}

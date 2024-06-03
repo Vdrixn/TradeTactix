@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from pycoingecko import CoinGeckoAPI
 import yfinance as yf
 import pandas as pd
-import numpy as np
+import numpy as np  # noqa: F401
 import csv
 import math
 
@@ -13,7 +13,6 @@ app = Flask(__name__)
 CORS(app)
 cg = CoinGeckoAPI()
 cache_timeout = timedelta(minutes=1)
-# Configura tu clave de API de OpenAI
 
 
 # Cachés de datos
@@ -98,6 +97,8 @@ def initialize_forex_symbols():
 
 
 # Endpoints para obtener listados de los simbolos de criptomonedas, acciones y divisas para barra de busqueda
+
+
 @app.route("/api/crypto-symbols")
 def api_crypto_symbols():
     # Devuelve el mapa de símbolos y nombres de criptomonedas
@@ -118,217 +119,9 @@ def api_forex_symbols():
 
 # ---------------------------------------------------------------------------
 
-""" # Endpoints para listado de activos financieros
-
-# ------------------------Criptomonedas-------------------
-
-
-def __get_crypto_data_from_api(cache_page):
-    start_index = cache_page * 50
-    coins = cg.get_coins_markets(
-        vs_currency="usd",
-        order="market_cap_desc",
-        per_page=50,
-        page=cache_page,
-        sparkline=True,
-        price_change_percentage="7d",
-    )
-
-    for index, coin in enumerate(coins, start=start_index):
-        crypto_info = {
-            "symbol": coin["symbol"].upper(),
-            "name": coin["name"],
-            "image": coin["image"],
-            "current_price": coin["current_price"],
-            "price_change_24h": round(coin["price_change_percentage_24h"], 2),
-            "price_change_7d": round(coin["price_change_percentage_7d_in_currency"], 2),
-            "market_cap": coin["market_cap"],
-            "sparkline": coin["sparkline_in_7d"]["price"]
-            if "sparkline_in_7d" in coin
-            else [],
-        }
-        crypto_cache[index] = {"timestamp": datetime.now(), "data": crypto_info}
-
-
-@app.route("/crypto_listings")
-def crypto_listings():
-    actual_page = request.args.get("page", 1, type=int)
-    limit = request.args.get("limit", 10, type=int)
-
-    start_index = (actual_page - 1) * limit
-    end_index = start_index + limit
-
-    all_data_recent = __is_cache_up_to_date(crypto_cache, start_index)
-    if not all_data_recent:
-        __get_crypto_data_from_api(start_index // 50)
-    all_data_recent = __is_cache_up_to_date(crypto_cache, end_index)
-    if not all_data_recent:
-        __get_crypto_data_from_api(end_index // 50)
-
-    crypto_data = [
-        crypto_cache[index]["data"] for index in range(start_index, end_index)
-    ]
-    return jsonify(crypto_data)
-
-
-# ------------------------Acciones------------------------
-
-
-def __get_stocks_data_from_api(cache_page):
-    start_index = cache_page * 25
-    subset_symbols = all_stock_symbols[start_index:]
-
-    try:
-        data = yf.download(subset_symbols, period="7d", group_by="ticker")
-    except Exception as e:
-        print(f"Error descargando datos para los símbolos: {e}")
-        return
-
-    elements = 0
-    for symbol in subset_symbols:
-        try:
-            if elements == 25:
-                break
-            if symbol not in data or len(data[symbol]) < 2:
-                continue
-
-            hist = data[symbol]
-            today_price = hist["Close"].iloc[-1]
-            if math.isnan(today_price):
-                continue
-
-            price_change_24h = (
-                (today_price - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100
-            )
-            price_change_7d = (
-                (today_price - hist["Close"].iloc[0]) / hist["Close"].iloc[0] * 100
-            )
-
-            stock = yf.Ticker(symbol)
-            stock_info = {
-                "symbol": symbol,
-                "name": stock.info.get("shortName", ""),
-                "current_price": round(today_price, 2),
-                "price_change_24h": round(price_change_24h, 2),
-                "price_change_7d": round(price_change_7d, 2),
-                "sparkline": hist["Close"].tolist(),
-                "market_cap": stock.info.get("marketCap", 0),
-            }
-            stocks_cache[start_index + elements] = {
-                "timestamp": datetime.now(),
-                "data": stock_info,
-            }
-            elements += 1
-
-        except Exception as e:
-            print(f"Error procesando el símbolo {symbol}: {e}")
-
-
-@app.route("/stocks_listings")
-def stocks_listings():
-    actual_page = request.args.get("page", 1, type=int)
-    limit = request.args.get("limit", 10, type=int)
-
-    start_index = (actual_page - 1) * limit
-    end_index = start_index + limit
-
-    if not __is_cache_up_to_date(stocks_cache, start_index):
-        __get_stocks_data_from_api(start_index // 25)
-    if not __is_cache_up_to_date(stocks_cache, end_index):
-        __get_stocks_data_from_api(end_index // 25)
-
-    stocks_data = [
-        stocks_cache[index]["data"]
-        for index in range(start_index, end_index)
-        if index in stocks_cache
-    ]
-    return jsonify(stocks_data)
-
-
-# ------------------------Divisas-------------------------
-
-
-def __get_forex_data_from_api(cache_page):
-    start_index = cache_page * 25
-    subset_symbols = all_forex_symbols[start_index:]
-
-    try:
-        data = yf.download(subset_symbols, period="7d", group_by="ticker")
-    except Exception as e:
-        print(f"Error descargando datos para los símbolos: {e}")
-        return
-
-    elements = 0
-    for symbol in subset_symbols:
-        try:
-            if elements == 25:
-                break
-            if symbol not in data or len(data[symbol]) < 2:
-                continue
-
-            hist = data[symbol]
-            today_price = hist["Close"].iloc[-1]
-            if math.isnan(today_price):
-                continue
-
-            price_change_24h = (
-                (today_price - hist["Close"].iloc[-2]) / hist["Close"].iloc[-2] * 100
-            )
-            price_change_7d = (
-                (today_price - hist["Close"].iloc[0]) / hist["Close"].iloc[0] * 100
-            )
-
-            stock = yf.Ticker(symbol)
-            stock_info = {
-                "symbol": symbol,
-                "name": stock.info.get("shortName", "-")
-                if stock.info.get("shortName")
-                else "-",
-                "current_price": today_price if not math.isnan(today_price) else "-",
-                "price_change_24h": round(price_change_24h, 2)
-                if not math.isnan(price_change_24h)
-                else "-",
-                "price_change_7d": round(price_change_7d, 2)
-                if not math.isnan(price_change_7d)
-                else "-",
-                "sparkline": [
-                    price for price in hist["Close"].tolist() if not math.isnan(price)
-                ],
-            }
-            forex_cache[start_index + elements] = {
-                "timestamp": datetime.now(),
-                "data": stock_info,
-            }
-            elements += 1
-
-        except Exception as e:
-            print(f"Error procesando el símbolo {symbol}: {e}")
-
-
-@app.route("/forex_listings")
-def forex_listings():
-    actual_page = request.args.get("page", 1, type=int)
-    limit = request.args.get("limit", 10, type=int)
-
-    start_index = (actual_page - 1) * limit
-    end_index = start_index + limit
-
-    if not __is_cache_up_to_date(forex_cache, start_index):
-        __get_forex_data_from_api(start_index // 25)
-    if not __is_cache_up_to_date(forex_cache, end_index):
-        __get_forex_data_from_api(end_index // 25)
-
-    forex_data = [
-        forex_cache[index]["data"]
-        for index in range(start_index, end_index)
-        if index in forex_cache
-    ]
-    return jsonify(forex_data)
-
-
-# --------------------------------------------------------------------------- """
 
 # Endpoints para listado de activos financieros
+
 
 # ------------------------Criptomonedas-------------------
 
@@ -491,6 +284,7 @@ def forex_listings():
 
 # ---------------------------------------------------------------------------
 
+
 # Endpoints para obtener resúmenes de activos financieros
 
 
@@ -598,7 +392,10 @@ def get_forex_summary(forex_ticker, symbol):
         return jsonify({"error": f"Error al obtener datos de divisas: {e}"}), 500
 
 
-# Endpoint para obtener datos de gráfico de los activos financieros
+# ---------------------------------------------------------------------------
+
+
+# Endpoint para obtener datos de gráfico de los activos financieros (Primera versión de BacktestingPage)
 
 
 @app.route("/api/chart", methods=["GET"])
@@ -755,7 +552,9 @@ def get_crypto_chart_data_yf(symbol, interval):
 
 # ---------------------------------------------------------------------------
 
+
 # Funciones para obtener datos históricos de activos financieros necesarias para el backtesting
+
 
 def __get_historical_data(symbol, start_date, end_date, interval):
     yf_intervals = {
@@ -823,16 +622,13 @@ def __get_crypto_historical_data(symbol, interval, start_date, end_date):
 
 def calculate_stop_loss_take_profit(trade_amount, risk_reward_ratio, leverage):
     print("risk_in_dollars", trade_amount)
-    # Calculate the desired profit in dollars
+    
     desired_profit_in_dollars = trade_amount * risk_reward_ratio
 
-    # Calculate the total position (exposure)
     total_position = trade_amount * leverage
 
-    # Calculate the percentage change for stop loss
     sl_percentage = trade_amount / total_position
 
-    # Calculate the percentage change for take profit
     tp_percentage = desired_profit_in_dollars / total_position
 
     print("percentage_change_stop_loss", sl_percentage)
@@ -840,9 +636,12 @@ def calculate_stop_loss_take_profit(trade_amount, risk_reward_ratio, leverage):
 
     return sl_percentage, tp_percentage
 
+
 # ---------------------------------------------------------------------------
 
+
 # Endpoint para backtesting de estrategias de trading
+
 
 def backtest(
     data,
@@ -1179,7 +978,7 @@ def backtest_endpoint():
         "signals": signals_dict,
         "portfolio": portfolio_dict,
         "summary": {
-            **summary,  # Añadir el summary calculado
+            **summary,
         },
     }
 
