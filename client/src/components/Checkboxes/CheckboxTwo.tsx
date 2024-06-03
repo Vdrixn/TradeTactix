@@ -1,13 +1,11 @@
 import { useState } from "react";
 
 interface CheckboxTwoProps {
-  value: string;
   label: string;
-  onChange: (value: string, isChecked: boolean) => void;
+  onChange: ( isChecked: boolean) => void;
 }
 
 const CheckboxTwo: React.FC<CheckboxTwoProps> = ({
-  value,
   label,
   onChange,
 }) => {
@@ -15,19 +13,19 @@ const CheckboxTwo: React.FC<CheckboxTwoProps> = ({
 
   const handleChange = () => {
     setIsChecked(!isChecked);
-    onChange(value, !isChecked);
+    onChange(!isChecked);
   };
 
   return (
     <div>
       <label
-        htmlFor={`checkbox-${value}`}
+        htmlFor={`checkbox`}
         className="flex cursor-pointer select-none items-center"
       >
         <div className="relative">
           <input
             type="checkbox"
-            id={`checkbox-${value}`}
+            id={`checkbox`}
             className="sr-only"
             onChange={handleChange}
             checked={isChecked}

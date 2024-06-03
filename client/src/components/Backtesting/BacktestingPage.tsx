@@ -381,7 +381,6 @@ def exit_conditions(position, current_price, date):
                 <div className="mb-4">
                   <CheckboxTwo
                     label="Calculo de SL y TP automático"
-                    value={useAutoSlTp} // Agregar el valor del checkbox
                     onChange={(e) => setUseAutoSlTp(e.target.checked)}
                   />
                 </div>
