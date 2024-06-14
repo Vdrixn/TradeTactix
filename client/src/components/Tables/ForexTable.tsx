@@ -122,7 +122,7 @@ const ForexTable: React.FC = () => {
 
               <input
                 type="text"
-                placeholder="Type to search..."
+                placeholder="Buscar en el listado..."
                 className="w-full bg-transparent pl-9 pr-4 font-medium focus:outline-none xl:w-125"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
