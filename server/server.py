@@ -138,13 +138,20 @@ def __get_crypto_data_from_api():
 
     crypto_cache.clear()
     for index, coin in enumerate(coins):
+        price_change_24h = coin["price_change_percentage_24h"]
+        price_change_7d = coin["price_change_percentage_7d_in_currency"]
+
         crypto_info = {
             "symbol": coin["symbol"].upper(),
             "name": coin["name"],
             "image": coin["image"],
             "current_price": coin["current_price"],
-            "price_change_24h": round(coin["price_change_percentage_24h"], 2),
-            "price_change_7d": round(coin["price_change_percentage_7d_in_currency"], 2),
+            "price_change_24h": round(price_change_24h, 2)
+            if price_change_24h is not None
+            else 0.0,
+            "price_change_7d": round(price_change_7d, 2)
+            if price_change_7d is not None
+            else 0.0,
             "market_cap": coin["market_cap"],
             "sparkline": coin["sparkline_in_7d"]["price"]
             if "sparkline_in_7d" in coin
@@ -196,7 +203,9 @@ def __get_stocks_data_from_api():
                 "name": stock.info.get("shortName", ""),
                 "current_price": round(today_price, 2),
                 "price_change_24h": round(price_change_24h, 2),
-                "price_change_7d": round(price_change_7d, 2),
+                "price_change_7d": round(price_change_7d, 2)
+                if not math.isnan(price_change_7d)
+                else "-",
                 "sparkline": hist["Close"].tolist(),
                 "market_cap": stock.info.get("marketCap", 0),
             }
