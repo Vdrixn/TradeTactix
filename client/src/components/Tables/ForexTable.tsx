@@ -24,7 +24,9 @@ const ForexTable: React.FC = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://127.0.0.1:8080/forex_listings`);
+        const response = await fetch(
+          `https://trade-tactix-73b60e3accca.herokuapp.com/forex_listings`,
+        );
         if (!response.ok) {
           throw new Error("Network response was not ok");
         }
