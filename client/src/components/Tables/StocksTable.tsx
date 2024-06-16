@@ -25,7 +25,7 @@ const StocksTable: React.FC = () => {
       setLoading(true);
       try {
         const response = await fetch(
-          `https://trade-tactix-73b60e3accca.herokuapp.com/stocks_listings`,
+          `https://trade-tactix-73b60e3accca.herokuapp.com:8080/stocks_listings`,
         );
         if (!response.ok) {
           throw new Error("Network response was not ok");
