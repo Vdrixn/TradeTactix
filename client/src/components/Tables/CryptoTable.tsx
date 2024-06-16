@@ -175,7 +175,7 @@ const CryptoTable: React.FC = () => {
                       />
                     </div>
                     <a
-                      href={`http://localhost:3000/backtesting?symbol=${crypto.symbol}&type=1`}
+                      href={`/backtesting?symbol=${crypto.symbol}&type=1`}
                       className="text-blue-500 hover:underline"
                     >
                       {crypto.symbol}

@@ -162,7 +162,7 @@ const StocksTable: React.FC = () => {
                 >
                   <td className="flex items-center p-2.5 xl:p-5">
                     <a
-                      href={`http://localhost:3000/backtesting?symbol=${stock.symbol}&type=2`}
+                      href={`/backtesting?symbol=${stock.symbol}&type=2`}
                       className="text-blue-500 hover:underline"
                     >
                       {stock.symbol}
