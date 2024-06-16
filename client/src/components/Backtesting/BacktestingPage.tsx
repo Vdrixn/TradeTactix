@@ -215,7 +215,7 @@ const BacktestingPage: React.FC = () => {
 
 Para realizar el backtesting de tu estrategia de trading, debes proporcionar dos funciones: 'generate_signals' y 'exit_conditions'. Aquí tienes los detalles y requisitos necesarios para cada una de ellas.
 
-**Estructura del DataFrame 'data'**
+**Estructura del DataFrame 'data' **
 
 El DataFrame 'data' tiene las siguientes columnas:
 - 'Close': Precio de cierre.
