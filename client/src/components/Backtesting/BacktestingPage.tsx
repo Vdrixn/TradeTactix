@@ -57,6 +57,7 @@ const BacktestingPage: React.FC = () => {
   const [backtestResults, setBacktestResults] = useState<any | null>(null);
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMessage, setAlertMessage] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false); // Estado para controlar la carga
 
   useEffect(() => {
     if (symbol) {
@@ -113,7 +114,7 @@ const BacktestingPage: React.FC = () => {
       return;
     }
     setShowAlert(false);
-    console.log(useAutoSlTp);
+    setLoading(true); // Activar la carga
     fetch("http://127.0.0.1:8080/api/backtest", {
       method: "POST",
       headers: {
@@ -135,6 +136,7 @@ const BacktestingPage: React.FC = () => {
     })
       .then((res) => res.json())
       .then((data) => {
+        setLoading(false); // Desactivar la carga
         if (data.error) {
           setAlertMessage(data.error);
           setShowAlert(true);
@@ -144,6 +146,7 @@ const BacktestingPage: React.FC = () => {
         }
       })
       .catch((err) => {
+        setLoading(false); // Desactivar la carga en caso de error
         setAlertMessage("Error realizando el backtest");
         setShowAlert(true);
         console.error(err);
@@ -397,7 +400,15 @@ def exit_conditions(position, current_price, date):
         </div>
       </div>
 
-      {backtestResults && <BacktestResults results={backtestResults} />}
+      {loading && (
+        <div className="flex w-full items-center justify-center p-10">
+          <div className="text-center text-xl font-medium">
+            Realizando backtesting...
+          </div>
+        </div>
+      )}
+
+      {backtestResults && !loading && <BacktestResults results={backtestResults} />}
     </div>
   );
 };
